@@ -32,13 +32,11 @@ def submission_postprocess(prob_dict):
     """
     result = {}
     result[12] = np.clip(prob_dict[12], 0.01, 0.99)
-    prev = prob_dict[24].copy()
-    result[24] = prev
-    for h in [48, 72]:
-        current = np.maximum(prob_dict[h], prev)
-        result[h] = current
-        prev = current
-    result[72] = np.ones(len(prob_dict[72]))
+    # Enforce full monotonic chain starting from clipped 12h
+    prev = result[12].copy()
     for h in [24, 48]:
-        result[h] = np.clip(result[h], 0.01, 0.99)
+        current = np.maximum(prob_dict[h], prev)
+        result[h] = np.clip(current, 0.01, 0.99)
+        prev = result[h]
+    result[72] = np.ones(len(prob_dict[72]))
     return result

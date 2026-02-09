@@ -191,19 +191,17 @@ def main():
     ci_stacked = c_index(y_time, y_event, stacked_12h_oof)
     print(f"  Stacking OOF C-index(12h)={ci_stacked:.4f}  (vs weighted avg {oof_details['c_index']:.4f})")
 
-    # --- Step 2c: Train Platt Scaling calibrators on OOF 24h/48h ---
-    print("\n=== Training Platt Scaling calibrators ===")
-    calibrators = {}
+    # --- Step 2c: Platt Scaling diagnostic (disabled -- worsens Brier) ---
+    print("\n=== Platt Scaling diagnostic (not applied) ===")
     for h in [24, 48]:
         labels_h, elig_h = _bhl(y_time, y_event, h)
         cal = platt_scaling(ens_oof[h][elig_h], labels_h[elig_h])
-        calibrators[h] = cal
-        # Evaluate calibration on OOF
-        cal_probs = np.copy(ens_oof[h])
-        cal_probs[elig_h] = calibrate(cal, ens_oof[h][elig_h])
+        cal_probs = calibrate(cal, ens_oof[h][elig_h])
         brier_before = horizon_brier_score(y_time, y_event, ens_oof[h], h)
-        brier_after = horizon_brier_score(y_time, y_event, cal_probs, h)
-        print(f"  {h}h: Brier before={brier_before:.4f}  after={brier_after:.4f}")
+        brier_after = horizon_brier_score(
+            y_time[elig_h], y_event[elig_h], cal_probs, h,
+        )
+        print(f"  {h}h: Brier before={brier_before:.4f}  after={brier_after:.4f}  (skipped)")
 
     # --- Step 3: Retrain on full data ---
     print("\n=== Retraining on full data ===")
@@ -225,7 +223,7 @@ def main():
             fallback = {h: np.full(len(test), 0.5) for h in HORIZONS}
             test_preds_list.append(fallback)
 
-    # --- Step 4: Ensemble + stacking + calibration + postprocess ---
+    # --- Step 4: Ensemble + stacking + postprocess ---
     print("\n=== Generating submission ===")
     test_ens = ensemble_predict_per_horizon(test_preds_list, weights_dict)
 
@@ -233,13 +231,6 @@ def main():
     stacked_12h = stacking_predict_12h(meta, test_preds_list)
     print(f"  Stacking 12h range: [{stacked_12h.min():.4f}, {stacked_12h.max():.4f}]")
     test_ens[12] = stacked_12h
-
-    # Apply Platt Scaling calibration on 24h/48h
-    for h in [24, 48]:
-        before_range = f"[{test_ens[h].min():.4f}, {test_ens[h].max():.4f}]"
-        test_ens[h] = calibrate(calibrators[h], test_ens[h])
-        after_range = f"[{test_ens[h].min():.4f}, {test_ens[h].max():.4f}]"
-        print(f"  Calibrated {h}h: {before_range} -> {after_range}")
 
     test_ens = submission_postprocess(test_ens)
 
