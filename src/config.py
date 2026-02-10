@@ -110,3 +110,34 @@ FEATURES_MEDIUM = [
 FEATURES_FULL = [
     f for f in ALL_FEATURES if f not in REDUNDANT_DROP
 ]
+
+# --- 0.96624 source code exact feature set (15 base + 3 engineered) ---
+FEATURES_V96624_BASE = [
+    "low_temporal_resolution_0_5h",
+    "log1p_area_first",
+    "log1p_growth",
+    "centroid_speed_m_per_h",
+    "dist_min_ci_0_5h",
+    "dist_slope_ci_0_5h",
+    "dist_fit_r2_0_5h",
+    "closing_speed_abs_m_per_h",
+    "spread_bearing_sin",
+    "spread_bearing_cos",
+    "event_start_hour",
+    "event_start_dayofweek",
+    "event_start_month",
+]
+FEATURES_V96624_ENGINEERED = [
+    "has_growth",
+    "is_approaching",
+    "log_dist_min",
+]
+
+# v96624 base + top-5 permutation importance features
+FEATURES_V96624_PLUS = list(FEATURES_V96624_BASE) + list(FEATURES_V96624_ENGINEERED) + [
+    "log_dist",           # CI_drop=0.00861, log-distance transform
+    "eta_hours",          # CI_drop=0.00783, estimated time of arrival
+    "dt_first_last_0_5h", # CI_drop=0.00626, observation time span
+    "growth_dist_ratio",  # CI_drop=0.00548, growth rate / distance
+    "threat_static",      # CI_drop=0.00548, sqrt(area) / distance
+]

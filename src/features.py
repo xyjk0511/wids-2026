@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from src.config import REDUNDANT_DROP, FEATURES_MINIMAL, FEATURES_MEDIUM, FEATURES_FULL
+from src.config import (
+    REDUNDANT_DROP, FEATURES_MINIMAL, FEATURES_MEDIUM, FEATURES_FULL,
+    FEATURES_V96624_BASE, FEATURES_V96624_ENGINEERED, FEATURES_V96624_PLUS,
+)
 
 
 def remove_redundant(df: pd.DataFrame) -> pd.DataFrame:
@@ -71,6 +74,22 @@ def add_engineered(df: pd.DataFrame) -> pd.DataFrame:
     # log-scale threat = log(area) - log(distance)
     df["log_area_over_dist"] = np.log1p(df["area_first_ha"]) - df["log_dist"]
 
+    # --- v96624 engineered features ---
+    if "dist_slope_ci_0_5h" in df.columns:
+        df["is_approaching"] = (df["dist_slope_ci_0_5h"] < 0).astype(int)
+    df["log_dist_min"] = np.log1p(df["dist_min_ci_0_5h"])
+
+    # --- round 3: interaction features ---
+
+    # threat urgency: close distance + fast approach
+    df["threat_urgency"] = df["dist_min_ci_0_5h"] * df["closing_speed_m_per_h"]
+
+    # directional threat: large fire aligned toward community
+    df["directional_threat"] = df["area_first_ha"] * df["alignment_abs"]
+
+    # expansion threat: fast-growing fire at close range
+    df["expansion_threat"] = df["radial_growth_m"] * df["inv_dist"]
+
     return df
 
 
@@ -79,23 +98,30 @@ def get_feature_set(df: pd.DataFrame, level: str = "medium") -> list[str]:
 
     Args:
         df: DataFrame (used to verify columns exist).
-        level: One of 'minimal', 'medium', 'full'.
+        level: One of 'minimal', 'medium', 'full', 'v96624'.
 
     Returns:
         List of feature column names present in df.
     """
+    if level == "v96624":
+        candidates = list(FEATURES_V96624_BASE) + list(FEATURES_V96624_ENGINEERED)
+        return [c for c in candidates if c in df.columns]
+
+    if level == "v96624_plus":
+        return [c for c in FEATURES_V96624_PLUS if c in df.columns]
+
     mapping = {
         "minimal": FEATURES_MINIMAL,
         "medium": FEATURES_MEDIUM,
         "full": FEATURES_FULL,
     }
     candidates = mapping[level]
-    # also include engineered features for medium/full
     engineered = [
         "log_dist", "dist_area_ratio", "has_growth", "speed_dist_ratio",
         "eta_hours", "inv_dist", "dist_close", "dist_alignment", "growth_dist_ratio",
         "dist_zone_score", "threat_static", "has_dynamics", "effective_closing",
         "dist_neg_exp", "hour_sin", "hour_cos", "log_area_over_dist",
+        "threat_urgency", "directional_threat", "expansion_threat",
     ]
     if level in ("medium", "full"):
         candidates = list(candidates) + engineered
