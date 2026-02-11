@@ -116,7 +116,7 @@ def main():
     print_oof_scores(oof_preds, y_time, y_event)
 
     # --- Step 2: Full retrain -- multi-seed averaging (5 x 200 trees) ---
-    RETRAIN_SEEDS = [42, 123, 456, 789, 2026]
+    RETRAIN_SEEDS = [42, 123, 456, 789, 2026, 314, 577, 888, 1234, 1999]
     N_ESTIMATORS_RETRAIN = 200
     print(f"\n=== Full retrain ({len(RETRAIN_SEEDS)} seeds x {N_ESTIMATORS_RETRAIN} trees) ===")
     X_train = train[feature_cols]

@@ -186,18 +186,17 @@ def _sksurv_y(y_time, y_event):
 
 
 def _sf_to_probs(surv_fns, horizons):
-    """Convert sksurv step survival functions to horizon probabilities."""
+    """Convert sksurv step survival functions to horizon probabilities.
+
+    Matches original 0.96624 code: explicit boundary check via fn.x[-1].
+    """
     result = {}
     for h in horizons:
-        probs = []
-        for sf in surv_fns:
-            try:
-                s_val = sf(h)
-            except ValueError:
-                # horizon exceeds max observed time; use last known S(t)
-                s_val = sf.y[-1]
-            probs.append(1.0 - s_val)
-        result[h] = np.clip(np.array(probs), 0.0, 1.0)
+        p_arr = np.zeros(len(surv_fns))
+        for i, fn in enumerate(surv_fns):
+            s_val = fn(h) if h <= fn.x[-1] else fn(fn.x[-1])
+            p_arr[i] = 1.0 - s_val
+        result[h] = np.clip(p_arr, 0.0, 1.0)
     return result
 
 
