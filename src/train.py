@@ -115,8 +115,10 @@ def main():
     oof_preds = run_cv(train, feature_cols)
     print_oof_scores(oof_preds, y_time, y_event)
 
-    # --- Step 2: Full retrain on all data ---
-    print("\n=== Full retrain (all samples) ===")
+    # --- Step 2: Full retrain -- multi-seed averaging (5 x 200 trees) ---
+    RETRAIN_SEEDS = [42, 123, 456, 789, 2026]
+    N_ESTIMATORS_RETRAIN = 200
+    print(f"\n=== Full retrain ({len(RETRAIN_SEEDS)} seeds x {N_ESTIMATORS_RETRAIN} trees) ===")
     X_train = train[feature_cols]
     X_test = test[feature_cols]
 
@@ -124,9 +126,15 @@ def main():
     X_train_s = pd.DataFrame(scaler.fit_transform(X_train), columns=feature_cols, index=X_train.index)
     X_test_s = pd.DataFrame(scaler.transform(X_test), columns=feature_cols, index=X_test.index)
 
-    rsf = RSF()
-    rsf.fit(X_train_s, y_time, y_event)
-    test_preds = rsf.predict_proba(X_test_s)
+    all_preds = []
+    for seed in RETRAIN_SEEDS:
+        rsf = RSF(n_estimators=N_ESTIMATORS_RETRAIN, random_state=seed)
+        rsf.fit(X_train_s, y_time, y_event)
+        preds = rsf.predict_proba(X_test_s)
+        all_preds.append(preds)
+        print(f"  Seed {seed} done")
+
+    test_preds = {h: np.mean([p[h] for p in all_preds], axis=0) for h in HORIZONS}
     print(f"  Trained on {len(X_train)} samples, predicting {len(X_test)} test samples")
 
     # --- Step 3: Postprocess + submission ---
