@@ -205,7 +205,7 @@ class RSF(BaseSurvivalModel):
     """Random Survival Forest via scikit-survival."""
 
     def __init__(self, n_estimators=1000, max_depth=5, min_samples_leaf=5,
-                 min_samples_split=10, max_features=12, random_state=42):
+                 min_samples_split=10, max_features="sqrt", random_state=42):
         from sksurv.ensemble import RandomSurvivalForest
         self.model = RandomSurvivalForest(
             n_estimators=n_estimators,
