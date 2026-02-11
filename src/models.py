@@ -228,6 +228,36 @@ class RSF(BaseSurvivalModel):
         return _sf_to_probs(surv_fns, horizons)
 
 
+# ---- 2b. Extra Survival Trees ----
+
+class EST(BaseSurvivalModel):
+    """Extra Survival Trees via scikit-survival (random splits, lower variance)."""
+
+    def __init__(self, n_estimators=1000, max_depth=5, min_samples_leaf=5,
+                 min_samples_split=10, max_features="sqrt", random_state=42):
+        from sksurv.ensemble import ExtraSurvivalTrees
+        self.model = ExtraSurvivalTrees(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
+            min_samples_split=min_samples_split,
+            max_features=max_features,
+            random_state=random_state,
+            n_jobs=-1,
+        )
+
+    def fit(self, X, y_time, y_event):
+        y = _sksurv_y(y_time, y_event)
+        self.model.fit(X.values, y)
+        self._cols = list(X.columns)
+        return self
+
+    def predict_proba(self, X, horizons=None):
+        horizons = horizons or HORIZONS
+        surv_fns = self.model.predict_survival_function(X[self._cols].values)
+        return _sf_to_probs(surv_fns, horizons)
+
+
 # ---- 3. Gradient Boosting Survival Analysis ----
 
 class GBSA(BaseSurvivalModel):

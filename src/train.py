@@ -14,7 +14,7 @@ from src.config import (
 )
 from src.features import remove_redundant, add_engineered, get_feature_set
 from src.evaluation import hybrid_score
-from src.models import RSF
+from src.models import RSF, EST
 from src.monotonic import enforce_monotonicity, submission_postprocess
 
 warnings.filterwarnings("ignore")
@@ -115,10 +115,10 @@ def main():
     oof_preds = run_cv(train, feature_cols)
     print_oof_scores(oof_preds, y_time, y_event)
 
-    # --- Step 2: Full retrain -- multi-seed averaging (5 x 200 trees) ---
-    RETRAIN_SEEDS = [42, 123, 456, 789, 2026, 314, 577, 888, 1234, 1999]
+    # --- Step 2: Full retrain -- RSF + EST multi-seed averaging ---
+    RETRAIN_SEEDS = [42, 123, 456, 789, 2026]
     N_ESTIMATORS_RETRAIN = 200
-    print(f"\n=== Full retrain ({len(RETRAIN_SEEDS)} seeds x {N_ESTIMATORS_RETRAIN} trees) ===")
+    print(f"\n=== Full retrain (RSF+EST, {len(RETRAIN_SEEDS)} seeds x {N_ESTIMATORS_RETRAIN} trees) ===")
     X_train = train[feature_cols]
     X_test = test[feature_cols]
 
@@ -130,12 +130,16 @@ def main():
     for seed in RETRAIN_SEEDS:
         rsf = RSF(n_estimators=N_ESTIMATORS_RETRAIN, random_state=seed)
         rsf.fit(X_train_s, y_time, y_event)
-        preds = rsf.predict_proba(X_test_s)
-        all_preds.append(preds)
-        print(f"  Seed {seed} done")
+        all_preds.append(rsf.predict_proba(X_test_s))
+        print(f"  RSF seed {seed} done")
+
+        est = EST(n_estimators=N_ESTIMATORS_RETRAIN, random_state=seed)
+        est.fit(X_train_s, y_time, y_event)
+        all_preds.append(est.predict_proba(X_test_s))
+        print(f"  EST seed {seed} done")
 
     test_preds = {h: np.mean([p[h] for p in all_preds], axis=0) for h in HORIZONS}
-    print(f"  Trained on {len(X_train)} samples, predicting {len(X_test)} test samples")
+    print(f"  {len(all_preds)} models averaged, predicting {len(X_test)} test samples")
 
     # --- Step 3: Postprocess + submission ---
     print("\n=== Generating submission ===")
