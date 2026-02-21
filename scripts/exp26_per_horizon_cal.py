@@ -86,7 +86,24 @@ def gap_gated_push_decoupled(p48_a, p24_a, a48, b48, a24, b24,
     return p48_new, p24_new
 
 
-def make_sub(anchor, p48_new, p24_new, path):
+def _check_p48_gate_independence(p48_a, p24_a, a48, b):
+    """Regression: p48 must be identical regardless of gate params."""
+    p48_g1, _ = gap_gated_push_decoupled(
+        p48_a, p24_a, a48, b, 1.0, 0.0,
+        lam=6.0, r_hi=1.1, r_lo=0.7, g_lo=0.012, g_hi=0.018)
+    p48_g2, _ = gap_gated_push_decoupled(
+        p48_a, p24_a, a48, b, 1.0, 0.0,
+        lam=6.0, r_hi=0.5, r_lo=0.3, g_lo=0.001, g_hi=0.050)
+    diff = np.max(np.abs(p48_g1 - p48_g2))
+    assert diff < 1e-12, f"p48 gate regression FAIL: max_diff={diff:.2e}"
+
+
+def make_sub(anchor, p48_new, p24_new, path, *, a48=None, b=None):
+    # Regression guard on every file
+    if a48 is not None and b is not None:
+        _check_p48_gate_independence(
+            anchor["prob_48h"].values, anchor["prob_24h"].values, a48, b)
+
     p48 = np.clip(p48_new, 1e-6, 1.0)
     p24 = np.clip(p24_new, 1e-6, 1.0)
     viol = (p48 < p24 + 1e-7).sum()
@@ -143,7 +160,8 @@ def main():
             p48_a, p24_a, a48, b, a24, b,
             lam=lam, r_hi=rh, r_lo=rl, g_lo=g_lo, g_hi=g_hi)
         make_sub(anchor, p48_new, p24_new,
-                 f"submissions/submission_exp26v2_{label}.csv")
+                 f"submissions/submission_exp26v2_{label}.csv",
+                 a48=a48, b=b)
 
     # Shared-param baseline for comparison
     print("\n=== Shared-param baseline ===")
@@ -151,21 +169,22 @@ def main():
         p48_a, p24_a, A_SHARED, B_SHARED, A_SHARED, B_SHARED,
         lam=lam, r_hi=rh, r_lo=rl, g_lo=g_lo, g_hi=g_hi)
     make_sub(anchor, p48_new, p24_new,
-             "submissions/submission_exp26v2_shared_baseline.csv")
+             "submissions/submission_exp26v2_shared_baseline.csv",
+             a48=A_SHARED, b=B_SHARED)
 
-    # Regression check: p48 must not depend on gate params
-    print("\n=== Regression: p48 independence from gate ===")
-    a48_t, b_t = 1.0565, -0.0108
-    p48_g1, _ = gap_gated_push_decoupled(
-        p48_a, p24_a, a48_t, b_t, 1.0, 0.0,
-        lam=lam, r_hi=rh, r_lo=rl, g_lo=g_lo, g_hi=g_hi)
-    p48_g2, _ = gap_gated_push_decoupled(
-        p48_a, p24_a, a48_t, b_t, 1.0, 0.0,
-        lam=lam, r_hi=0.5, r_lo=0.3, g_lo=0.001, g_hi=0.050)
-    diff = np.max(np.abs(p48_g1 - p48_g2))
-    status = "PASS" if diff < 1e-12 else "FAIL"
-    print(f"  max|p48_diff| = {diff:.2e}  [{status}]")
-    assert diff < 1e-12, "p48 calibration must not depend on gap-gate params!"
+    # Narrow search around B=-0.0130 (use if A10_Blo > 0.96783)
+    print("\n=== Narrow search around B=-0.0130 ===")
+    narrow = [
+        ("A10_B125", 1.0584, 1.0565, -0.0125),
+        ("A10_B135", 1.0584, 1.0565, -0.0135),
+    ]
+    for label, a24, a48, b in narrow:
+        p48_new, p24_new = gap_gated_push_decoupled(
+            p48_a, p24_a, a48, b, a24, b,
+            lam=lam, r_hi=rh, r_lo=rl, g_lo=g_lo, g_hi=g_hi)
+        make_sub(anchor, p48_new, p24_new,
+                 f"submissions/submission_exp26v2_{label}.csv",
+                 a48=a48, b=b)
 
     print("\n=== Exp26v2 complete ===")
 
