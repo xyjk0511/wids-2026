@@ -1,4 +1,6 @@
-"""Exp24: Extended base (CoxPH+WeibullAFT) + RankXGB 12h feature + eps sweep + logit blend.
+"""Exp24: Extended base (CoxPH+WeibullAFT) + eps sweep + logit blend.
+
+Note: RankXGB is NOT included in base — it should be a 12h-only head feature (separate experiment).
 
 Usage:
     .venv_sksurv22/Scripts/python.exe -m scripts.exp24_extended_base

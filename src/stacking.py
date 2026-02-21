@@ -29,7 +29,9 @@ def _make_base(name, seed):
         return CoxPH(penalizer=0.1)
     if name == "WeibullAFT":
         return WeibullAFT(penalizer=0.05)
-    return XGBoostAFT(n_estimators=200, random_state=seed)
+    if name == "XGBCox":
+        return XGBoostAFT(n_estimators=200, random_state=seed)
+    raise ValueError(f"Unknown base model: {name}")
 
 
 def _train_predict_base(X_tr, yt_tr, ye_tr, X_pred, seed=42, base_names=None):
