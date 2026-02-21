@@ -109,14 +109,17 @@ def logit_blend(test_preds, anchor_path, tag="exp24"):
         return 1 / (1 + np.exp(-x))
 
     for alpha in alphas:
-        sub = pd.read_csv(TEST_PATH)[["event_id"]]
+        raw = {}
         for h in [12, 24, 48]:
             col = f"prob_{h}h"
             p_new = np.clip(test_preds[h], 1e-6, 1 - 1e-6)
             p_anc = anchor[col].values
-            blended = _sigmoid(alpha * _logit(p_new) + (1 - alpha) * _logit(p_anc))
-            sub[col] = blended
-        sub["prob_72h"] = 1.0
+            raw[h] = _sigmoid(alpha * _logit(p_new) + (1 - alpha) * _logit(p_anc))
+        raw[72] = np.ones(len(raw[12]))
+        pp = submission_postprocess(raw)
+        sub = pd.read_csv(TEST_PATH)[["event_id"]]
+        for h in HORIZONS:
+            sub[f"prob_{h}h"] = pp[h]
         fname = SUBMISSIONS_DIR / f"submission_{tag}_blend_a{alpha:.1f}.csv"
         sub.to_csv(fname, index=False)
         print(f"  alpha={alpha:.1f}: saved {fname.name}")
