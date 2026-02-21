@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import (
     TRAIN_PATH, TEST_PATH, FEATURES_MEDIUM, TIME_COL, EVENT_COL,
-    HORIZONS, SUBMISSION_PATH,
+    HORIZONS, SUBMISSIONS_DIR,
 )
 from src.features import add_engineered
 from src.evaluation import hybrid_score, c_index, horizon_brier_score
@@ -87,8 +87,8 @@ def eps_sweep(test_preds, tag="exp24"):
     for eps in eps_values:
         pp = submission_postprocess(test_preds, cap_12_by_24_eps=eps)
         eps_str = "none" if eps is None else f"{eps:.0e}"
-        fname = SUBMISSION_PATH / f"submission_{tag}_eps{eps_str}.csv"
-        sub = pd.read_csv(TEST_PATH)[["id"]]
+        fname = SUBMISSIONS_DIR / f"submission_{tag}_eps{eps_str}.csv"
+        sub = pd.read_csv(TEST_PATH)[["event_id"]]
         for h in HORIZONS:
             col = f"prob_{h}h"
             sub[col] = pp[h] if h != 72 else np.ones(len(sub))
@@ -109,7 +109,7 @@ def logit_blend(test_preds, anchor_path, tag="exp24"):
         return 1 / (1 + np.exp(-x))
 
     for alpha in alphas:
-        sub = pd.read_csv(TEST_PATH)[["id"]]
+        sub = pd.read_csv(TEST_PATH)[["event_id"]]
         for h in [12, 24, 48]:
             col = f"prob_{h}h"
             p_new = np.clip(test_preds[h], 1e-6, 1 - 1e-6)
@@ -117,7 +117,7 @@ def logit_blend(test_preds, anchor_path, tag="exp24"):
             blended = _sigmoid(alpha * _logit(p_new) + (1 - alpha) * _logit(p_anc))
             sub[col] = blended
         sub["prob_72h"] = 1.0
-        fname = SUBMISSION_PATH / f"submission_{tag}_blend_a{alpha:.1f}.csv"
+        fname = SUBMISSIONS_DIR / f"submission_{tag}_blend_a{alpha:.1f}.csv"
         sub.to_csv(fname, index=False)
         print(f"  alpha={alpha:.1f}: saved {fname.name}")
 
@@ -135,7 +135,7 @@ def main():
     prob_dict[72] = np.ones(len(train))
     score, details = hybrid_score(y_time, y_event, prob_dict)
     print(f"\n  Extended base OOF Hybrid: {score:.4f}")
-    print(f"    CI={details['ci']:.4f} WBrier={details['wbrier']:.4f}")
+    print(f"    CI={details['c_index']:.4f} WBrier={details['weighted_brier']:.4f}")
 
     # Phase 2: Generate test predictions
     test_preds = generate_test_preds(train, test, feature_cols, y_time, y_event, heads)
@@ -145,7 +145,7 @@ def main():
     eps_sweep(test_preds)
 
     # Phase 4: logit blend with anchor
-    anchor_path = SUBMISSION_PATH / "submission_0.96624.csv"
+    anchor_path = SUBMISSIONS_DIR / "submission_0.96624.csv"
     if anchor_path.exists():
         print("\n=== Logit blend with anchor 0.96624 ===")
         logit_blend(test_preds, anchor_path)
@@ -154,10 +154,10 @@ def main():
 
     # Also save raw submission
     pp = submission_postprocess(test_preds)
-    sub = pd.read_csv(TEST_PATH)[["id"]]
+    sub = pd.read_csv(TEST_PATH)[["event_id"]]
     for h in HORIZONS:
         sub[f"prob_{h}h"] = pp[h] if h != 72 else np.ones(len(sub))
-    raw_path = SUBMISSION_PATH / "submission_exp24_raw.csv"
+    raw_path = SUBMISSIONS_DIR / "submission_exp24_raw.csv"
     sub.to_csv(raw_path, index=False)
     print(f"\n  Raw submission: {raw_path.name}")
 
