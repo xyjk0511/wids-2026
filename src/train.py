@@ -35,7 +35,7 @@ def load_data(feature_level=FEATURE_LEVEL):
     train = pd.read_csv(TRAIN_PATH)
     test = pd.read_csv(TEST_PATH)
 
-    if feature_level in ("v96624", "v96624_plus"):
+    if feature_level in ("v96624", "v96624_plus", "v96624_elim"):
         train = add_engineered(train)
         test = add_engineered(test)
     else:

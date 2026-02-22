@@ -110,6 +110,10 @@ def get_feature_set(df: pd.DataFrame, level: str = "medium") -> list[str]:
     if level == "v96624_plus":
         return [c for c in FEATURES_V96624_PLUS if c in df.columns]
 
+    if level == "v96624_elim":
+        from src.config import FEATURES_V96624_ELIM
+        return [c for c in FEATURES_V96624_ELIM if c in df.columns]
+
     mapping = {
         "minimal": FEATURES_MINIMAL,
         "medium": FEATURES_MEDIUM,

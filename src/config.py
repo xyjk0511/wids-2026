@@ -5,7 +5,8 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR
 TRAIN_PATH = DATA_DIR / "train.csv"
 TEST_PATH = DATA_DIR / "test.csv"
-SUBMISSION_PATH = PROJECT_DIR / "submission.csv"
+SUBMISSIONS_DIR = PROJECT_DIR / "submissions"
+SUBMISSION_PATH = SUBMISSIONS_DIR / "submission.csv"
 SAMPLE_SUB_PATH = DATA_DIR / "sample_submission.csv"
 
 # --- Target ---
@@ -141,3 +142,7 @@ FEATURES_V96624_PLUS = list(FEATURES_V96624_BASE) + list(FEATURES_V96624_ENGINEE
     "growth_dist_ratio",  # CI_drop=0.00548, growth rate / distance
     "threat_static",      # CI_drop=0.00548, sqrt(area) / distance
 ]
+
+# v96624_plus after backward elimination (removed log1p_area_first, dist_slope_ci_0_5h)
+FEATURES_V96624_ELIM = [f for f in FEATURES_V96624_PLUS
+                        if f not in ("log1p_area_first", "dist_slope_ci_0_5h")]
