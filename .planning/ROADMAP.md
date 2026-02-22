@@ -14,18 +14,17 @@ Plans:
 **Success**: CV stable or improved; LB >= 0.96783 (current PB)
 **Estimated submissions**: 2-3
 
-### Phase 2: Model Diversity Ensemble (Rewritten)
+### Phase 2: Model Diversity Ensemble — CLOSED (both directions failed)
 **Goal**: Improve LB through IPCW-aware stacking and new calibration methods
-**Requirements**: R1 (Model Diversity) — R6 (Seed Expansion) pre-completed (5 seeds already in train.py)
-**Plans:** 2 plans
+**Requirements**: R1 (Model Diversity) — R6 (Seed Expansion) pre-completed
+**Plans:** 2/2 executed, both failed
 
 Plans:
-- [x] 02-01-PLAN.md — IPCW stacking with RSF+EST+GBSA and Ridge/LR meta-learners (no signal, OOF=0.96610 < gate 0.9697)
-- [ ] 02-02-PLAN.md — Calibration method comparison (isotonic/Platt/piecewise) for 24h/48h
+- [x] 02-01-PLAN.md — IPCW stacking: gate fail (OOF=0.96108 < 0.9697)
+- [x] 02-02-PLAN.md — Calibration: LB=0.96338 (OOF +0.0059 but LB -0.00445)
 
-**Success**: LB > 0.968 (PB=0.96783); R6 already complete (5 seeds)
-**Estimated submissions**: 2-3
-**Depends on**: Phase 1 closed (pivot strategy)
+**Result**: Phase goal NOT met. 221 samples insufficient for meta-learning and calibration transfer.
+**Submissions used**: 1 (exp32)
 
 ### Phase 3: Conformal Calibration
 **Goal**: Reduce WBrier through SOTA calibration
