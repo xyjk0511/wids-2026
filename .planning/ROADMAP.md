@@ -42,9 +42,13 @@ Plans:
 
 ### Phase 4: 更强锚点获取/复现
 **Goal**: 获取或复现比 0.96624 更强的基础预测
-**方向**:
-- 复现/改进参考 notebook pipeline（精确对齐 sksurv 版本、超参、后处理）
-- 寻找公开高分 notebook 作为新锚点
-- 多锚点融合（如有多个 0.966+ 来源）
+**Requirements**: ANCHOR-01 (Reproduction), ANCHOR-02 (Blending), ANCHOR-03 (Hyperparam Grid)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Track 1: Reproduction tooling + user notebook identification
+- [ ] 04-02-PLAN.md — Track 2+3: Multi-anchor blend + RSF hyperparam grid
+
+**分阶段目标**: LB > 0.9685 → LB > 0.970 → 0.975 (stretch)
 **Success**: 新锚点 LB > 0.968
 **Estimated submissions**: 5-10
