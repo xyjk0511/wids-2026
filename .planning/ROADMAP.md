@@ -1,6 +1,10 @@
-# Roadmap — WiDS 2026 Push to 0.975+
+# Roadmap — WiDS 2026
 
-## Milestone 1: Score 0.975+
+## Milestone 1: Score Improvement (止损模式)
+
+**阶段目标**: 先破 0.9685，再谈 0.975
+**核心教训**: Phase 1+2 证明 221 样本上模型侧改进无法超越锚点后处理
+**战略判断**: 到 0.975+ 大概率需要更强锚点，而非校准/模型改进
 
 ### Phase 1: Stacking & Feature Baseline Fix
 **Goal**: Remove known overfitting sources, establish clean baseline
@@ -26,26 +30,24 @@ Plans:
 **Result**: Phase goal NOT met. 221 samples insufficient for meta-learning and calibration transfer.
 **Submissions used**: 1 (exp32)
 
-### Phase 3: Conformal Calibration
-**Goal**: Reduce WBrier through SOTA calibration
-**Requirements**: R3 (CSD/CiPOT), R4 (KM-Sampling)
-**Tasks**:
-- Implement CSD (Conformalized Survival Distribution) calibration
-- Implement KM-sampling for censored data utilization
-- Compare conformal vs current odds-scale calibration on OOF
-- Apply best calibration method to submission pipeline
-**Success**: WBrier improves >= 0.001 on OOF; LB improves
-**Estimated submissions**: 3-5
-**Depends on**: Phase 2 ensemble
+### Phase 3: Conformal Calibration (止损式，最小实验)
+**Goal**: 测试 anchor-based split-conformal 能否在 24h/48h 上提分
+**约束**: 仅 2 条实验，提交上限 3 次
+**硬门槛**: OOF Hybrid >= +0.0015, rho24/48 >= 0.90, CI 不下降 → 否则不提交
+**止损**: 若 3 次提交后仍 < 0.9685，立即关闭，转 Phase 4
 
-### Phase 4: Integration & Fine-tuning
-**Goal**: Combine all improvements, fine-tune for maximum score
-**Requirements**: All
-**Tasks**:
-- Integrate Phase 1-3 improvements into unified pipeline
-- Re-run logit-space (A,B) calibration on new base predictions
-- Fine-tune gap-gated parameters for new distribution
-- Final LB validation
-**Success**: LB >= 0.975
-**Estimated submissions**: 3-5
-**Depends on**: Phase 3 calibration
+Plans:
+- [ ] 03-01-PLAN.md — Split-conformal on anchor 24h/48h (2 experiments max)
+
+**Success**: LB > 0.9685
+**Estimated submissions**: 1-3
+**Depends on**: Phase 2 closed
+
+### Phase 4: 更强锚点获取/复现
+**Goal**: 获取或复现比 0.96624 更强的基础预测
+**方向**:
+- 复现/改进参考 notebook pipeline（精确对齐 sksurv 版本、超参、后处理）
+- 寻找公开高分 notebook 作为新锚点
+- 多锚点融合（如有多个 0.966+ 来源）
+**Success**: 新锚点 LB > 0.968
+**Estimated submissions**: 5-10

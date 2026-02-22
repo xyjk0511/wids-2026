@@ -1,7 +1,7 @@
 # Project State — WiDS 2026
 
-## Current Phase: 2 (Model Diversity Ensemble) — CLOSED
-## Milestone: 1 (Score 0.975+)
+## Current Phase: 3 (Conformal Calibration — 止损式)
+## Milestone: 1 (先破 0.9685，再谈 0.975)
 
 ## Progress
 - [x] Codebase mapping complete (7 documents)
@@ -11,8 +11,8 @@
 - [x] Phase 1: Stacking & Feature Baseline Fix — CLOSED (head overfits, both plans failed)
 - [x] Phase 2 Plan 01: IPCW stacking — CLOSED (no signal, OOF hybrid=0.96108 < 0.9697 gate)
 - [x] Phase 2 Plan 02: Calibration — CLOSED (LB=0.96338, OOF +0.0059 but LB -0.00445)
-- [ ] Phase 3: Conformal Calibration
-- [ ] Phase 4: Integration & Fine-tuning
+- [ ] Phase 3: Conformal Calibration (止损式，最多3次提交)
+- [ ] Phase 4: 更强锚点获取/复现
 
 ## Key Metrics
 - PB: 0.96783 (Exp23, 2026-02-20)
@@ -30,7 +30,8 @@
 - RSF+EST baseline + logit post-processing remains best path (PB=0.96783)
 - IPCW stacking no signal: cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005); meta-learning on 221 samples overfits
 - Calibration迁移失败: Platt/B/48h OOF +0.0059 但LB -0.00445, N=221校准过拟合, RSF+EST test分布与anchor差异导致迁移失败
-- Phase 2全部关闭: 模型侧改进在221样本上无法超越锚点后处理
+- 战略转向止损模式: Conformal最多3次提交，< 0.9685则关闭，转更强锚点路线
+- 到0.975+大概率需要更强锚点，校准/模型改进天花板已触及
 
-## Stopped At: Phase 2 CLOSED, ready for Phase 3 (Conformal Calibration)
+## Stopped At: Phase 3 待规划 (止损式 split-conformal)
 ## Last Updated: 2026-02-22
