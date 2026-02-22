@@ -542,7 +542,7 @@ def _validate_and_save(
     print(f"  Preview:\n{sub.head()}")
 
     # Spearman vs reference
-    ref_path = "submission 0.96624.csv"
+    ref_path = "submissions/submission_0.96624.csv"
     try:
         ref = pd.read_csv(ref_path)
         from scipy.stats import spearmanr

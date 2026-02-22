@@ -7,6 +7,8 @@ import pandas as pd
 from lifelines import CoxPHFitter
 
 from src.config import HORIZONS, FEATURES_MEDIUM
+from src.labels import build_horizon_labels
+from src.surv_post import surv_fns_to_probs
 
 SEED_AVG_SEEDS = [42, 123, 456]
 
@@ -185,26 +187,20 @@ def _sksurv_y(y_time, y_event):
     )
 
 
-def _sf_to_probs(surv_fns, horizons):
+def _sf_to_probs(surv_fns, horizons, policy="clip"):
     """Convert sksurv step survival functions to horizon probabilities.
 
-    Matches original 0.96624 code: explicit boundary check via fn.x[-1].
+    Uses a centralized conversion layer for reproducible boundary behavior.
     """
-    result = {}
-    for h in horizons:
-        p_arr = np.zeros(len(surv_fns))
-        for i, fn in enumerate(surv_fns):
-            s_val = fn(h) if h <= fn.x[-1] else fn(fn.x[-1])
-            p_arr[i] = 1.0 - s_val
-        result[h] = np.clip(p_arr, 0.0, 1.0)
-    return result
+    return surv_fns_to_probs(surv_fns, horizons, policy=policy)
 
 
 class RSF(BaseSurvivalModel):
     """Random Survival Forest via scikit-survival."""
 
     def __init__(self, n_estimators=1000, max_depth=5, min_samples_leaf=5,
-                 min_samples_split=10, max_features="sqrt", random_state=42):
+                 min_samples_split=10, max_features="sqrt", random_state=42,
+                 sf_policy="clip"):
         from sksurv.ensemble import RandomSurvivalForest
         self.model = RandomSurvivalForest(
             n_estimators=n_estimators,
@@ -215,6 +211,7 @@ class RSF(BaseSurvivalModel):
             random_state=random_state,
             n_jobs=-1,
         )
+        self.sf_policy = sf_policy
 
     def fit(self, X, y_time, y_event):
         y = _sksurv_y(y_time, y_event)
@@ -225,7 +222,11 @@ class RSF(BaseSurvivalModel):
     def predict_proba(self, X, horizons=None):
         horizons = horizons or HORIZONS
         surv_fns = self.model.predict_survival_function(X[self._cols].values)
-        return _sf_to_probs(surv_fns, horizons)
+        return _sf_to_probs(surv_fns, horizons, policy=self.sf_policy)
+
+    def predict_risk(self, X):
+        """Return cumulative hazard sum (continuous risk score, higher = more risk)."""
+        return self.model.predict(X[self._cols].values)
 
 
 # ---- 2b. Extra Survival Trees ----
@@ -234,7 +235,8 @@ class EST(BaseSurvivalModel):
     """Extra Survival Trees via scikit-survival (random splits, lower variance)."""
 
     def __init__(self, n_estimators=1000, max_depth=5, min_samples_leaf=5,
-                 min_samples_split=10, max_features="sqrt", random_state=42):
+                 min_samples_split=10, max_features="sqrt", random_state=42,
+                 sf_policy="clip"):
         from sksurv.ensemble import ExtraSurvivalTrees
         self.model = ExtraSurvivalTrees(
             n_estimators=n_estimators,
@@ -245,6 +247,7 @@ class EST(BaseSurvivalModel):
             random_state=random_state,
             n_jobs=-1,
         )
+        self.sf_policy = sf_policy
 
     def fit(self, X, y_time, y_event):
         y = _sksurv_y(y_time, y_event)
@@ -255,7 +258,11 @@ class EST(BaseSurvivalModel):
     def predict_proba(self, X, horizons=None):
         horizons = horizons or HORIZONS
         surv_fns = self.model.predict_survival_function(X[self._cols].values)
-        return _sf_to_probs(surv_fns, horizons)
+        return _sf_to_probs(surv_fns, horizons, policy=self.sf_policy)
+
+    def predict_risk(self, X):
+        """Return cumulative hazard sum (continuous risk score, higher = more risk)."""
+        return self.model.predict(X[self._cols].values)
 
 
 # ---- 3. Gradient Boosting Survival Analysis ----
@@ -264,7 +271,8 @@ class GBSA(BaseSurvivalModel):
     """Gradient Boosting Survival Analysis via scikit-survival."""
 
     def __init__(self, n_estimators=300, max_depth=3, learning_rate=0.02,
-                 subsample=0.8, dropout_rate=0.1, random_state=42):
+                 subsample=0.8, dropout_rate=0.1, random_state=42,
+                 sf_policy="clip"):
         from sksurv.ensemble import GradientBoostingSurvivalAnalysis
         self.model = GradientBoostingSurvivalAnalysis(
             n_estimators=n_estimators,
@@ -276,6 +284,7 @@ class GBSA(BaseSurvivalModel):
             min_samples_split=16,
             random_state=random_state,
         )
+        self.sf_policy = sf_policy
 
     def fit(self, X, y_time, y_event):
         y = _sksurv_y(y_time, y_event)
@@ -286,24 +295,10 @@ class GBSA(BaseSurvivalModel):
     def predict_proba(self, X, horizons=None):
         horizons = horizons or HORIZONS
         surv_fns = self.model.predict_survival_function(X[self._cols].values)
-        return _sf_to_probs(surv_fns, horizons)
+        return _sf_to_probs(surv_fns, horizons, policy=self.sf_policy)
 
 
 # ---- 4. Multi-Horizon XGBoost ----
-
-def _build_horizon_labels(y_time, y_event, horizon):
-    """Build binary labels for a single horizon."""
-    y_time = np.asarray(y_time, dtype=float)
-    y_event = np.asarray(y_event, dtype=int)
-    n = len(y_time)
-    labels = np.full(n, np.nan)
-
-    labels[(y_event == 1) & (y_time <= horizon)] = 1.0
-    labels[(y_event == 1) & (y_time > horizon)] = 0.0
-    labels[(y_event == 0) & (y_time >= horizon)] = 0.0
-
-    eligible = ~np.isnan(labels)
-    return labels, eligible
 
 
 class MultiHorizonXGB(BaseSurvivalModel):
@@ -323,7 +318,7 @@ class MultiHorizonXGB(BaseSurvivalModel):
         y_event = np.asarray(y_event, dtype=int)
 
         for h in HORIZONS:
-            labels, eligible = _build_horizon_labels(y_time, y_event, h)
+            labels, eligible = build_horizon_labels(y_time, y_event, h)
             if h == 72:
                 self.clfs[h] = None
                 continue
@@ -392,7 +387,7 @@ class RankXGB(BaseSurvivalModel):
         y_time = np.asarray(y_time, dtype=float)
         y_event = np.asarray(y_event, dtype=int)
 
-        labels, eligible = _build_horizon_labels(y_time, y_event, 12)
+        labels, eligible = build_horizon_labels(y_time, y_event, 12)
         X_h = X.values[eligible]
         y_h = labels[eligible]
 
@@ -448,7 +443,7 @@ class MultiHorizonLGBM(BaseSurvivalModel):
         y_event = np.asarray(y_event, dtype=int)
 
         for h in HORIZONS:
-            labels, eligible = _build_horizon_labels(y_time, y_event, h)
+            labels, eligible = build_horizon_labels(y_time, y_event, h)
             if h == 72:
                 self.clfs[h] = None
                 continue
@@ -514,7 +509,7 @@ class MultiHorizonCatBoost(BaseSurvivalModel):
         y_event = np.asarray(y_event, dtype=int)
 
         for h in HORIZONS:
-            labels, eligible = _build_horizon_labels(y_time, y_event, h)
+            labels, eligible = build_horizon_labels(y_time, y_event, h)
             if h == 72:
                 self.clfs[h] = None
                 continue
@@ -554,4 +549,101 @@ class MultiHorizonCatBoost(BaseSurvivalModel):
                     clf.predict_proba(Xv)[:, 1] for clf in self.clfs[h]
                 ])
                 result[h] = preds.mean(axis=1)
+        return result
+
+
+# ---- 8. XGBoost Cox Survival ----
+
+class XGBoostAFT(BaseSurvivalModel):
+    """XGBoost with survival:cox objective + Breslow baseline estimator.
+
+    Outputs hazard ratios, then converts to survival probabilities via
+    S(t|x) = S0(t)^exp(margin), where S0(t) is the Breslow baseline.
+    Named XGBoostAFT for backward compatibility with train.py imports.
+    """
+
+    def __init__(self, n_estimators=200, max_depth=3, learning_rate=0.05,
+                 subsample=0.8, random_state=42, **kwargs):
+        self.n_estimators = n_estimators
+        self.max_depth = max_depth
+        self.learning_rate = learning_rate
+        self.subsample = subsample
+        self.random_state = random_state
+        self.model = None
+        self._baseline_times = None
+        self._baseline_survival = None
+
+    def fit(self, X, y_time, y_event):
+        import xgboost as xgb
+
+        self._cols = list(X.columns)
+        y_time = np.asarray(y_time, dtype=float).clip(min=0.01)
+        y_event = np.asarray(y_event, dtype=int)
+
+        # Cox label: +time if event, -time if censored
+        y_cox = np.where(y_event == 1, y_time, -y_time)
+
+        dtrain = xgb.DMatrix(X.values, label=y_cox)
+
+        params = {
+            "objective": "survival:cox",
+            "eval_metric": "cox-nloglik",
+            "max_depth": self.max_depth,
+            "learning_rate": self.learning_rate,
+            "subsample": self.subsample,
+            "tree_method": "hist",
+            "seed": self.random_state,
+            "verbosity": 0,
+        }
+
+        self.model = xgb.train(
+            params, dtrain, num_boost_round=self.n_estimators,
+        )
+
+        # Breslow baseline hazard estimation
+        margins = self.model.predict(dtrain, output_margin=True)
+        self._estimate_breslow(y_time, y_event, margins)
+        return self
+
+    def _estimate_breslow(self, y_time, y_event, margins):
+        """Estimate Breslow baseline cumulative hazard and survival."""
+        order = np.argsort(y_time)
+        times_sorted = y_time[order]
+        events_sorted = y_event[order]
+        exp_margins = np.exp(margins[order])
+
+        unique_times = np.unique(times_sorted[events_sorted == 1])
+        if len(unique_times) == 0:
+            self._baseline_times = np.array([0.0])
+            self._baseline_cum_hazard = np.array([0.0])
+            self._baseline_survival = np.array([1.0])
+            return
+        cum_hazard = np.zeros(len(unique_times))
+
+        for j, t in enumerate(unique_times):
+            at_risk = exp_margins[times_sorted >= t].sum()
+            n_events = events_sorted[times_sorted == t].sum()
+            h = n_events / max(at_risk, 1e-8)
+            cum_hazard[j] = (cum_hazard[j - 1] if j > 0 else 0.0) + h
+
+        self._baseline_times = unique_times
+        self._baseline_cum_hazard = cum_hazard
+        self._baseline_survival = np.exp(-cum_hazard)
+
+    def predict_proba(self, X, horizons=None):
+        import xgboost as xgb
+
+        horizons = horizons or HORIZONS
+        dmat = xgb.DMatrix(X[self._cols].values)
+        margins = self.model.predict(dmat, output_margin=True)
+        exp_margins = np.exp(margins)
+
+        result = {}
+        for h in horizons:
+            # Interpolate baseline cumulative hazard at horizon h
+            H0_h = np.interp(h, self._baseline_times, self._baseline_cum_hazard,
+                             left=0.0, right=self._baseline_cum_hazard[-1])
+            # S(h|x) = exp(-H0(h) * exp(margin))
+            surv = np.exp(-H0_h * exp_margins)
+            result[h] = np.clip(1.0 - surv, 0.0, 1.0)
         return result
