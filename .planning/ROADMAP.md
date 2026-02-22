@@ -5,7 +5,7 @@
 ### Phase 1: Stacking & Feature Baseline Fix
 **Goal**: Remove known overfitting sources, establish clean baseline
 **Requirements**: R2 (Feature Selection), R5 (Stacking Simplification)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 01-01-PLAN.md — LR-head baseline (config flags only, zero code changes)
