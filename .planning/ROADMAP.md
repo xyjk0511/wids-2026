@@ -30,18 +30,15 @@ Plans:
 **Result**: Phase goal NOT met. 221 samples insufficient for meta-learning and calibration transfer.
 **Submissions used**: 1 (exp32)
 
-### Phase 3: Conformal Calibration (止损式，最小实验)
+### Phase 3: Conformal Calibration — CLOSED (止损，不提交)
 **Goal**: 测试 anchor-based split-conformal 能否在 24h/48h 上提分
-**约束**: 仅 2 条实验，提交上限 3 次
-**硬门槛**: OOF Hybrid >= +0.0015, rho24/48 >= 0.90, CI 不下降 → 否则不提交
-**止损**: 若 3 次提交后仍 < 0.9685，立即关闭，转 Phase 4
+**Plans:** 1/1 executed, gate passes on OOF but pattern matches Exp32 failure
 
 Plans:
-- [ ] 03-01-PLAN.md — Split-conformal on anchor 24h/48h (2 experiments max)
+- [x] Exp33 split-conformal: OOF +0.0071 但 rho=1.0(排序不变), 阶梯校准图, 与Exp32同模式
 
-**Success**: LB > 0.9685
-**Estimated submissions**: 1-3
-**Depends on**: Phase 2 closed
+**Result**: 止损不提交. 三类校准(logit线性/Platt参数/非参数分位数)均证明N=221校准无法迁移到LB.
+**Submissions used**: 0
 
 ### Phase 4: 更强锚点获取/复现
 **Goal**: 获取或复现比 0.96624 更强的基础预测
