@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 from sklearn.linear_model import Ridge, LogisticRegression
-from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, ".")
@@ -32,18 +32,27 @@ REF_PATH = "submissions/submission_0.96624.csv"
 OUT_PATH = "submissions/submission_exp31_ipcw.csv"
 
 
-def compute_ipcw_weights(y_time, y_event):
-    """KM-based IPCW weights: 1/G(t) for events, 1.0 for censored."""
+def fit_censoring_km(y_time, y_event):
+    """Fit KM on censoring distribution. Returns fitted KMF."""
     kmf = KaplanMeierFitter()
-    kmf.fit(y_time, event_observed=(1 - y_event))  # model censoring
-    weights = np.ones(len(y_time))
-    event_mask = y_event == 1
-    t_events = y_time[event_mask]
-    g_vals = kmf.survival_function_at_times(t_events).values
-    g_vals = np.clip(g_vals, 0.05, None)
-    weights[event_mask] = 1.0 / g_vals
-    print(f"  IPCW weights — min={weights.min():.3f} max={weights.max():.3f} "
-          f"p5={np.percentile(weights,5):.3f} p95={np.percentile(weights,95):.3f}")
+    kmf.fit(y_time, event_observed=(1 - y_event))
+    return kmf
+
+
+def compute_ipcw_weights_horizon(kmf, y_time, y_event, horizon, eligible):
+    """Horizon-aware IPCW: event→1/G(t), survived→1/G(h), censored<h excluded by eligible."""
+    t_e = y_time[eligible]
+    ev_e = y_event[eligible]
+    n = eligible.sum()
+    weights = np.ones(n)
+    event_mask = ev_e == 1
+    if event_mask.any():
+        g_t = kmf.survival_function_at_times(t_e[event_mask]).values
+        weights[event_mask] = 1.0 / np.clip(g_t, 0.05, None)
+    surv_mask = ~event_mask
+    if surv_mask.any():
+        g_h = max(kmf.survival_function_at_times([horizon]).values[0], 0.05)
+        weights[surv_mask] = 1.0 / g_h
     return weights
 
 
@@ -95,14 +104,12 @@ def collect_oof_meta(train, feature_cols, n_splits, n_repeats):
     return meta, y_time, y_event
 
 
-def fit_meta_learners(meta, y_time, y_event, ipcw_weights):
-    """Fit Ridge and LR per horizon using IPCW weights. Returns OOF prob dicts."""
+def fit_meta_learners(meta, y_time, y_event, kmf):
+    """Cross-fitted Ridge and LR per horizon with horizon-aware IPCW."""
     n = len(y_time)
     ridge_oof = {h: np.zeros(n) for h in HORIZONS}
     lr_oof = {h: np.zeros(n) for h in HORIZONS}
 
-    # Build 12-column meta-feature matrix (3 models x 4 horizons)
-    # For each horizon, fit meta-learner on eligible samples
     meta_X = np.column_stack([meta[mi][hi] for mi in range(3) for hi in range(len(HORIZONS))])
 
     for hi, h in enumerate(HORIZONS):
@@ -111,18 +118,23 @@ def fit_meta_learners(meta, y_time, y_event, ipcw_weights):
             continue
         X_e = meta_X[eligible]
         y_e = labels[eligible].astype(float)
-        w_e = ipcw_weights[eligible]
+        w_e = compute_ipcw_weights_horizon(kmf, y_time, y_event, h, eligible)
+        elig_idx = np.where(eligible)[0]
 
-        ridge = Ridge(alpha=1.0)
-        ridge.fit(X_e, y_e, sample_weight=w_e)
-        ridge_oof[h][eligible] = np.clip(ridge.predict(X_e), 0.0, 1.0)
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        for tr, va in skf.split(X_e, y_e.astype(int)):
+            ridge = Ridge(alpha=1.0)
+            ridge.fit(X_e[tr], y_e[tr], sample_weight=w_e[tr])
+            ridge_oof[h][elig_idx[va]] = np.clip(ridge.predict(X_e[va]), 0.0, 1.0)
 
-        if len(np.unique(y_e)) < 2:
-            lr_oof[h][eligible] = y_e  # constant horizon, pass through
-        else:
-            lr = LogisticRegression(C=0.01, max_iter=2000)
-            lr.fit(X_e, y_e, sample_weight=w_e)
-            lr_oof[h][eligible] = lr.predict_proba(X_e)[:, 1]
+            if len(np.unique(y_e[tr])) < 2:
+                lr_oof[h][elig_idx[va]] = y_e[va]
+            else:
+                lr = LogisticRegression(C=0.01, max_iter=2000)
+                lr.fit(X_e[tr], y_e[tr], sample_weight=w_e[tr])
+                lr_oof[h][elig_idx[va]] = lr.predict_proba(X_e[va])[:, 1]
+
+        print(f"    h={h}: IPCW w_e min={w_e.min():.3f} max={w_e.max():.3f}")
 
     return ridge_oof, lr_oof
 
@@ -147,8 +159,8 @@ def eval_gate(oof_dict, y_time, y_event, ref_df, label, test_preds=None):
     return score, min_spearman, passes
 
 
-def predict_test(train, test, feature_cols, meta_oof, y_time, y_event, ipcw_weights):
-    """Quick full-retrain to get test predictions for Spearman gate check."""
+def predict_test(train, test, feature_cols, meta_oof, y_time, y_event, kmf):
+    """Full-retrain test predictions for both Ridge and LR."""
     scaler = StandardScaler()
     X_tr = pd.DataFrame(scaler.fit_transform(train[feature_cols]), columns=feature_cols)
     X_te = pd.DataFrame(scaler.transform(test[feature_cols]), columns=feature_cols)
@@ -160,24 +172,29 @@ def predict_test(train, test, feature_cols, meta_oof, y_time, y_event, ipcw_weig
     test_meta = np.column_stack([model.predict_proba(X_te)[h] for model in models for h in HORIZONS])
     train_meta = np.column_stack([model.predict_proba(X_tr)[h] for model in models for h in HORIZONS])
 
-    # Use OOF meta to fit Ridge (quick check only)
-    meta_X = np.column_stack([meta_oof[mi][hi] for mi in range(3) for hi in range(len(HORIZONS))])
-    test_preds = {}
+    ridge_preds, lr_preds = {}, {}
     for h in HORIZONS:
         labels, eligible = build_horizon_labels(y_time, y_event, h)
         if eligible.sum() < 2 or len(np.unique(labels[eligible])) < 2:
-            test_preds[h] = np.ones(len(test))
+            ridge_preds[h] = np.ones(len(test))
+            lr_preds[h] = np.ones(len(test))
             continue
         X_e = train_meta[eligible]
         y_e = labels[eligible].astype(float)
-        w_e = ipcw_weights[eligible]
-        m = Ridge(alpha=1.0)
-        m.fit(X_e, y_e, sample_weight=w_e)
-        test_preds[h] = np.clip(m.predict(test_meta), 0.0, 1.0)
-    return test_preds
+        w_e = compute_ipcw_weights_horizon(kmf, y_time, y_event, h, eligible)
+
+        m_r = Ridge(alpha=1.0)
+        m_r.fit(X_e, y_e, sample_weight=w_e)
+        ridge_preds[h] = np.clip(m_r.predict(test_meta), 0.0, 1.0)
+
+        m_l = LogisticRegression(C=0.01, max_iter=2000)
+        m_l.fit(X_e, y_e, sample_weight=w_e)
+        lr_preds[h] = m_l.predict_proba(test_meta)[:, 1]
+
+    return ridge_preds, lr_preds
 
 
-def generate_submission(train, test, feature_cols, best_learner, y_time, y_event, ipcw_weights):
+def generate_submission(train, test, feature_cols, best_learner, y_time, y_event, kmf):
     """Retrain on full data, generate test predictions."""
     scaler = StandardScaler()
     X_tr = pd.DataFrame(scaler.fit_transform(train[feature_cols]), columns=feature_cols)
@@ -187,28 +204,18 @@ def generate_submission(train, test, feature_cols, best_learner, y_time, y_event
     for model in models:
         model.fit(X_tr, y_time, y_event)
 
-    # Build test meta-features
-    test_meta = np.column_stack([
-        model.predict_proba(X_te)[h]
-        for model in models
-        for h in HORIZONS
-    ])
-    # Build train meta-features for fitting meta-learner
-    train_meta = np.column_stack([
-        model.predict_proba(X_tr)[h]
-        for model in models
-        for h in HORIZONS
-    ])
+    test_meta = np.column_stack([model.predict_proba(X_te)[h] for model in models for h in HORIZONS])
+    train_meta = np.column_stack([model.predict_proba(X_tr)[h] for model in models for h in HORIZONS])
 
     sub = pd.read_csv(SAMPLE_SUB_PATH)
-    for hi, h in enumerate(HORIZONS):
+    for h in HORIZONS:
         labels, eligible = build_horizon_labels(y_time, y_event, h)
         if h == 72:
             sub[f"prob_{h}h"] = 1.0
             continue
         X_e = train_meta[eligible]
         y_e = labels[eligible].astype(float)
-        w_e = ipcw_weights[eligible]
+        w_e = compute_ipcw_weights_horizon(kmf, y_time, y_event, h, eligible)
 
         if best_learner == "Ridge":
             m = Ridge(alpha=1.0)
@@ -218,7 +225,6 @@ def generate_submission(train, test, feature_cols, best_learner, y_time, y_event
             m = LogisticRegression(C=0.01, max_iter=2000)
             m.fit(X_e, y_e, sample_weight=w_e)
             preds = m.predict_proba(test_meta)[:, 1]
-
         sub[f"prob_{h}h"] = preds
 
     sub.to_csv(OUT_PATH, index=False)
@@ -234,13 +240,13 @@ def main():
     y_time = train[TIME_COL].values
     y_event = train[EVENT_COL].values
 
-    print("=== IPCW weights ===")
-    ipcw_weights = compute_ipcw_weights(y_time, y_event)
+    print("=== Fitting censoring KM ===")
+    kmf = fit_censoring_km(y_time, y_event)
 
     # Stage 1: 5x1 quick check
     print("\n=== Stage 1: 5x1 CV ===")
     meta, y_time, y_event = collect_oof_meta(train, FEATURES, n_splits=5, n_repeats=1)
-    ridge_oof, lr_oof = fit_meta_learners(meta, y_time, y_event, ipcw_weights)
+    ridge_oof, lr_oof = fit_meta_learners(meta, y_time, y_event, kmf)
 
     ridge_score, _, _ = eval_gate(ridge_oof, y_time, y_event, ref_df, "Ridge-S1")
     lr_score, _, _ = eval_gate(lr_oof, y_time, y_event, ref_df, "LR-S1")
@@ -253,14 +259,14 @@ def main():
     # Stage 2: 5x10 full CV
     print("\n=== Stage 2: 5x10 CV ===")
     meta, y_time, y_event = collect_oof_meta(train, FEATURES, n_splits=5, n_repeats=10)
-    ridge_oof, lr_oof = fit_meta_learners(meta, y_time, y_event, ipcw_weights)
+    ridge_oof, lr_oof = fit_meta_learners(meta, y_time, y_event, kmf)
 
-    # Compute test predictions for Spearman gate check
+    # Compute test predictions for Spearman gate check (separate for Ridge/LR)
     print("  Computing test predictions for Spearman check...")
-    test_preds = predict_test(train, test, FEATURES, meta, y_time, y_event, ipcw_weights)
+    ridge_test, lr_test = predict_test(train, test, FEATURES, meta, y_time, y_event, kmf)
 
-    ridge_score, ridge_spear, ridge_pass = eval_gate(ridge_oof, y_time, y_event, ref_df, "Ridge-S2", test_preds)
-    lr_score, lr_spear, lr_pass = eval_gate(lr_oof, y_time, y_event, ref_df, "LR-S2", test_preds)
+    ridge_score, ridge_spear, ridge_pass = eval_gate(ridge_oof, y_time, y_event, ref_df, "Ridge-S2", ridge_test)
+    lr_score, lr_spear, lr_pass = eval_gate(lr_oof, y_time, y_event, ref_df, "LR-S2", lr_test)
 
     gate_passes = ridge_pass or lr_pass
     if not gate_passes:
@@ -271,7 +277,7 @@ def main():
 
     best_learner = "Ridge" if ridge_score >= lr_score else "LR"
     print(f"\nGate PASSED -- best meta-learner: {best_learner}")
-    generate_submission(train, test, FEATURES, best_learner, y_time, y_event, ipcw_weights)
+    generate_submission(train, test, FEATURES, best_learner, y_time, y_event, kmf)
 
 
 if __name__ == "__main__":

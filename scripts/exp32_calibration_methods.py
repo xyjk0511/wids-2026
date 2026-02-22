@@ -284,19 +284,33 @@ def main():
     fit_fn, apply_fn = METHODS[method_best]
     cal_model = fit_fn(p_elig, y_elig)
 
-    # Apply to test: use anchor as base, calibrate anchor predictions
-    anchor_h = anchor[f"prob_{h_best}h"].values
-    cal_test_h = apply_fn(cal_model, anchor_h)
+    # Retrain RSF+EST on full data → test predictions in same distribution as OOF
+    print("  Retraining RSF+EST for test predictions (same distribution as OOF)...")
+    scaler = StandardScaler()
+    X_tr = pd.DataFrame(scaler.fit_transform(train[feature_cols]), columns=feature_cols)
+    X_te = pd.DataFrame(scaler.transform(test[feature_cols]), columns=feature_cols)
+    test_blend = {h: np.zeros(len(test)) for h in HORIZONS}
+    for seed in SEEDS:
+        rsf = RSF(random_state=seed); rsf.fit(X_tr, y_time, y_event)
+        est = EST(random_state=seed); est.fit(X_tr, y_time, y_event)
+        for h in HORIZONS:
+            test_blend[h] += 0.5 * rsf.predict_proba(X_te)[h] + 0.5 * est.predict_proba(X_te)[h]
+    for h in HORIZONS:
+        test_blend[h] /= len(SEEDS)
+
+    # Apply calibrator to RSF+EST test predictions (same distribution as OOF)
+    cal_test_h = apply_fn(cal_model, test_blend[h_best])
 
     if track_best.startswith("A"):
         alpha_best = best.get("alpha", 0.2)
+        anchor_h = anchor[f"prob_{h_best}h"].values
         test_h_new = anchor_h + alpha_best * (cal_test_h - anchor_h)
     else:
         test_h_new = cal_test_h
 
     test_h_new = np.clip(test_h_new, EPS, 1.0 - EPS)
 
-    # Build submission: replace best horizon, keep others from anchor
+    # Build submission: calibrated horizon from RSF+EST, others from anchor
     test_preds = {h: anchor[f"prob_{h}h"].values.copy() for h in HORIZONS}
     test_preds[h_best] = test_h_new
 
