@@ -170,3 +170,11 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 - Per-horizon A 解耦（A24=1.0584 vs A48=1.0565）在 LB 上无收益，shared A=1.0655 已足够
 - A10_Bhi 跳过（B=-0.0085 预期继续下降），剩余候选池放弃
 - **方向关闭**：回归 shared (A,B) 管线
+
+## Phase 1 Plan 01: LR-Head Baseline (2026-02-22)
+
+**配置**: `--head-model logit --head-base-only --calibration-mode none`
+- CV Hybrid: 0.9707 (vs XGB baseline 0.9720)
+- **LB: 0.96274** ← 远低于 PB 0.96783，差距 ~0.005
+- 结论: LR head + base-only 特征不足以替代 XGB stacking head
+- Checkpoint 判定: LB < 0.9670，需调查 LR head 参数或回退方案
