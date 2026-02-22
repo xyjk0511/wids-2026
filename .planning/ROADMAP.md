@@ -5,10 +5,12 @@
 ### Phase 1: Stacking & Feature Baseline Fix
 **Goal**: Remove known overfitting sources, establish clean baseline
 **Requirements**: R2 (Feature Selection), R5 (Stacking Simplification)
-**Tasks**:
-- Replace XGB stacking heads with LogisticRegression/Isotonic
-- Feature ablation: find optimal subset between 16-24 features
-- Run CV + submit to LB to establish new clean baseline
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — LR-head baseline (config flags only, zero code changes)
+- [ ] 01-02-PLAN.md — Backward elimination for optimal feature subset
+
 **Success**: CV stable or improved; LB >= 0.96783 (current PB)
 **Estimated submissions**: 2-3
 
