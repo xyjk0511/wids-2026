@@ -1,0 +1,17 @@
+{
+  "project": "wids-2026-kaggle",
+  "created": "2026-02-22",
+  "workflow": {
+    "research_before_plan": true,
+    "verification_agent": true,
+    "integration_checks": false,
+    "auto_commit": true,
+    "commit_style": "atomic"
+  },
+  "preferences": {
+    "language": "zh-CN",
+    "test_command": "python -m src.train",
+    "primary_metric": "hybrid_score",
+    "target": 0.975
+  }
+}
