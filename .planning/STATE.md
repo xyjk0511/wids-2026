@@ -1,6 +1,6 @@
 # Project State — WiDS 2026
 
-## Current Phase: Not Started
+## Current Phase: 1 (Planned, ready to execute)
 ## Milestone: 1 (Score 0.975+)
 
 ## Progress
@@ -8,7 +8,7 @@
 - [x] PROJECT.md created
 - [x] REQUIREMENTS.md created
 - [x] ROADMAP.md created
-- [ ] Phase 1: Stacking & Feature Baseline Fix
+- [~] Phase 1: Stacking & Feature Baseline Fix (PLANNED — 2 plans, verified PASS)
 - [ ] Phase 2: Model Diversity Ensemble
 - [ ] Phase 3: Conformal Calibration
 - [ ] Phase 4: Integration & Fine-tuning
