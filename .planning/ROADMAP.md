@@ -14,17 +14,18 @@ Plans:
 **Success**: CV stable or improved; LB >= 0.96783 (current PB)
 **Estimated submissions**: 2-3
 
-### Phase 2: Model Diversity Ensemble
-**Goal**: Improve CI through model diversity
+### Phase 2: Model Diversity Ensemble (Rewritten)
+**Goal**: Improve LB through IPCW-aware stacking and new calibration methods
 **Requirements**: R1 (Model Diversity), R6 (Seed Expansion)
-**Tasks**:
-- Activate CoxPH and WeibullAFT in ensemble pipeline
-- Add XGBoostCox (survival:cox objective) to base models
-- Expand seed averaging from 3 to 5 seeds
-- Re-optimize ensemble weights with new model pool
-**Success**: OOF CI improves >= 0.002; LB improves
-**Estimated submissions**: 3-4
-**Depends on**: Phase 1 baseline
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — IPCW stacking with RSF+EST+GBSA and Ridge/LR meta-learners
+- [ ] 02-02-PLAN.md — Calibration method comparison (isotonic/Platt/piecewise) for 24h/48h
+
+**Success**: LB > 0.968 (PB=0.96783); R6 already complete (5 seeds)
+**Estimated submissions**: 2-3
+**Depends on**: Phase 1 closed (pivot strategy)
 
 ### Phase 3: Conformal Calibration
 **Goal**: Reduce WBrier through SOTA calibration
