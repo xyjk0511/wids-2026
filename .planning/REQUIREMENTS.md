@@ -8,7 +8,7 @@
 ## R1: Model Diversity for CI
 **Priority**: High
 **Rationale**: Only RSF+EST used; CoxPH/WeibullAFT/XGBoostCox available but dormant. Adding diverse models improves ranking (CI).
-**Acceptance**: Ensemble includes >= 4 model types; CI improves on OOF.
+**Acceptance**: Ensemble includes >= 3 model types (RSF+EST+GBSA); CI improves on OOF. (Revised from >= 4: CoxPH, WeibullAFT, XGBoostCox experimentally invalidated in Exp27/28/30 — CI too low or unstable on N=221.)
 **Risk**: More models may increase CV-LB gap on 221 samples.
 
 ## R2: Feature Selection Optimization

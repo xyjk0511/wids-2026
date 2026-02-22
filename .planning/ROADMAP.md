@@ -16,7 +16,7 @@ Plans:
 
 ### Phase 2: Model Diversity Ensemble (Rewritten)
 **Goal**: Improve LB through IPCW-aware stacking and new calibration methods
-**Requirements**: R1 (Model Diversity), R6 (Seed Expansion)
+**Requirements**: R1 (Model Diversity) — R6 (Seed Expansion) pre-completed (5 seeds already in train.py)
 **Plans:** 2 plans
 
 Plans:
