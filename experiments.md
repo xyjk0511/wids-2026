@@ -188,3 +188,12 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 - **LB: 0.95511** ← 灾难性退化, CV-LB gap=0.018
 - 结论: XGB stacking head 在 221 样本上严重过拟合, head 层是 LB 退化的根因
 - **Phase 1 stacking head 方向彻底关闭**: LR head (0.96274) 和 XGB head (0.95511) 均远低于无 head 的 RSF baseline (0.96331)
+
+## v96624 RSF-only No-Head Baseline (2026-02-22)
+
+**配置**: `--feature-level v96624 --disable-head` (16特征, RSF=1.00, 无EST)
+- CV Hybrid: 0.9703 (postproc), CI=0.9420
+- Spearman vs 0.96624: rho~0.92 (对齐度高)
+- **LB: 0.95840** ← 低于原始锚点 0.96624 达 0.00784
+- 结论: 我们的 sksurv RSF-only 无法复现参考代码的 0.96624 质量; EST 在 v96624 特征上崩溃(Hybrid=0.9019)
+- **模型侧改进方向关闭**: 无法通过我们的 pipeline 生成比 0.96624 更好的锚点
