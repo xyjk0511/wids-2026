@@ -178,3 +178,13 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 - **LB: 0.96274** ← 远低于 PB 0.96783，差距 ~0.005
 - 结论: LR head + base-only 特征不足以替代 XGB stacking head
 - Checkpoint 判定: LB < 0.9670，需调查 LR head 参数或回退方案
+
+## Phase 1 Plan 02: Backward Elimination + XGB Head (2026-02-22)
+
+**配置**: `--feature-level v96624_elim` (19特征, 移除 log1p_area_first + dist_slope_ci_0_5h)
+- Backward elim: 21→19 特征, CV 0.9714→0.9728
+- Full pipeline CV Hybrid: 0.9730 (CI=0.9433, WBrier=0.0142)
+- Spearman vs 0.96624: rho~0.76 (严重偏移)
+- **LB: 0.95511** ← 灾难性退化, CV-LB gap=0.018
+- 结论: XGB stacking head 在 221 样本上严重过拟合, head 层是 LB 退化的根因
+- **Phase 1 stacking head 方向彻底关闭**: LR head (0.96274) 和 XGB head (0.95511) 均远低于无 head 的 RSF baseline (0.96331)

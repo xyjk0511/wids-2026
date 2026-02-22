@@ -1,6 +1,6 @@
 # Project State — WiDS 2026
 
-## Current Phase: 1 (In Progress)
+## Current Phase: 1 (CLOSED — stacking head direction abandoned)
 ## Milestone: 1 (Score 0.975+)
 
 ## Progress
@@ -8,21 +8,23 @@
 - [x] PROJECT.md created
 - [x] REQUIREMENTS.md created
 - [x] ROADMAP.md created
-- [~] Phase 1: Stacking & Feature Baseline Fix (IN PROGRESS — Plan 01 at checkpoint)
+- [x] Phase 1: Stacking & Feature Baseline Fix — CLOSED (head overfits, both plans failed)
 - [ ] Phase 2: Model Diversity Ensemble
 - [ ] Phase 3: Conformal Calibration
 - [ ] Phase 4: Integration & Fine-tuning
 
 ## Key Metrics
 - PB: 0.96783 (Exp23, 2026-02-20)
-- LR-head CV: Hybrid=0.9707, **LB=0.96274** (Plan 01, 2026-02-22) ← FAILED
+- Plan 01 LR-head: LB=0.96274 ← FAILED
+- Plan 02 XGB-head 19feat: LB=0.95511 ← FAILED (catastrophic)
 - Target: 0.975+
-- Submissions used: ~38
-- Submissions remaining: >20
+- Submissions used: ~40
+- Submissions remaining: >18
 
 ## Decisions
 - Use .venv_sksurv22 Python env for all pipeline runs (has lifelines + sksurv)
-- LR head CV=0.9707 vs XGB baseline 0.9720 — small drop, LB is true test
+- **Stacking heads abandoned**: 221 samples too small, XGB/LR heads overfit severely
+- RSF+EST baseline + logit post-processing remains best path (PB=0.96783)
 
-## Stopped At: 01-01 checkpoint FAILED — LB 0.96274 < 0.9670 threshold
+## Stopped At: Phase 1 closed, need to pivot strategy
 ## Last Updated: 2026-02-22
