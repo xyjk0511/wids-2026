@@ -45,6 +45,8 @@
 | 39 | 2026-02-22 | Exp27 RSF+XGB best_blend (RSF=0.6 XGB=0.4) | 0.9701 | 0.9407 | 0.0172 | TBD | 3模型多样性测试: RSF=0.9691, XGB=0.9682, Cox=0.9346(废弃). 最优混合排除Cox. Spearman: blend rho12=0.91 rho24=0.94 rho48=0.93. 待提交验证 |
 | 40 | 2026-02-22 | Exp28 anchor+model blend+PB cal | - | - | - | TBD | 将exp27 blend以alpha=0.05~0.20混入0.96624锚点再校准. rho48随alpha单调下降(0.964→0.962). 模型混合方向关闭——自训练模型是噪声非信号 |
 | 41 | 2026-02-22 | Exp30 DeepSurv (pycox.CoxPH) | 0.9364 | 0.9072 | 0.0510 | 不提交 | DL生存模型测试. v96624 16特征, 2层[64,64], dropout=0.3, 5fold×10repeat. CI比RSF低0.033, WBrier高3x. 止损门槛未达(需+0.003, 实际-0.034). LogisticHazard完全崩溃(概率坍缩~0.98). **DL方向关闭** |
+| 42 | 2026-02-22 | Exp31 IPCW stacking (RSF+EST+GBSA, Ridge meta) | 0.9611 | 0.9351 | 0.0278 | 不提交 | Gate fail: OOF hybrid=0.96108 < 0.9697门槛. GBSA meta-features未给RSF+EST基线增加信号. cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005). **IPCW stacking方向关闭** |
+| 43 | 2026-02-22 | Exp32 Platt/B/48h calibration (RSF+EST blend) | 0.9539 | 0.9320 | 0.0368 | 0.96338 | OOF +0.0059 hybrid但LB -0.00445. 校准在N=221上过拟合, RSF+EST test分布与anchor差异导致迁移失败. **独立校准方向关闭** |
 
 
 ## Exp22 绯诲垪璇︾粏鍒嗘瀽
@@ -110,6 +112,8 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 5. ~~Exp26 per-horizon A 解耦~~ (已关闭，中性)
 6. ~~Exp25 p12 rank reorder~~ (已关闭，中性)
 7. ~~Exp30 DL生存模型~~ (已关闭，CI低0.033，221样本DL无信号)
+8. ~~Exp31 IPCW stacking~~ (已关闭，gate fail OOF=0.96108<0.9697)
+9. ~~Exp32 独立校准~~ (已关闭，OOF+0.0059但LB-0.00445，N=221过拟合)
 
 ## 今日补充 (2026-02-21)
 
