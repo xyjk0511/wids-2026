@@ -20,7 +20,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — IPCW stacking with RSF+EST+GBSA and Ridge/LR meta-learners
+- [x] 02-01-PLAN.md — IPCW stacking with RSF+EST+GBSA and Ridge/LR meta-learners (no signal, OOF=0.96610 < gate 0.9697)
 - [ ] 02-02-PLAN.md — Calibration method comparison (isotonic/Platt/piecewise) for 24h/48h
 
 **Success**: LB > 0.968 (PB=0.96783); R6 already complete (5 seeds)
