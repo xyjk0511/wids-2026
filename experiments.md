@@ -48,6 +48,7 @@
 | 42 | 2026-02-22 | Exp31 IPCW stacking (RSF+EST+GBSA, Ridge meta) | 0.9611 | 0.9351 | 0.0278 | 不提交 | Gate fail: OOF hybrid=0.96108 < 0.9697门槛. GBSA meta-features未给RSF+EST基线增加信号. cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005). **IPCW stacking方向关闭** |
 | 43 | 2026-02-22 | Exp32 Platt/B/48h calibration (RSF+EST blend) | 0.9539 | 0.9320 | 0.0368 | 0.96338 | OOF +0.0059 hybrid但LB -0.00445. 校准在N=221上过拟合, RSF+EST test分布与anchor差异导致迁移失败. **独立校准方向关闭** |
 | 44 | 2026-02-22 | Exp33 Split-conformal quantile recal (RSF+EST blend) | 0.9551 | 0.9320 | 0.0329 | 不提交 | OOF +0.0071 hybrid但rho=1.0(排序不变), 阶梯校准图(6/10 bin true=0). 与Exp32同模式: OOF涨+CI不变+rho≈1=LB高风险. 止损不提交. **非参数校准方向关闭** |
+| 45 | 2026-02-22 | Exp30 Multi-anchor blend w=0.8 (0.96624×0.8 + PLE_avg×0.2) | - | - | - | TBD | Phase4 Track2: 复现ple-stacker基础模型(GBSA400+RSF500+XGB IPCW avg), p48 rho=0.968 vs anchor. w=0.8保守blend. 待提交 |
 
 
 ## Exp22 绯诲垪璇︾粏鍒嗘瀽
@@ -229,3 +230,21 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 - LogisticHazard 概率全部坍缩到 ~0.98，离散化 label_transform 在极小样本下失败
 - 止损门槛 +0.003 未达到（实际 -0.034），DeepHitSingle 按规则跳过
 - **DL 方向彻底关闭**：小样本生存分析中树模型的归纳偏置（分段常数+bagging）远优于神经网络
+
+## Exp30: Multi-Anchor Blend (Phase 4) (2026-02-22)
+
+**动机**: 复现两个公开 notebook (0.96654 ple-stacker, 0.96536 ridge-stacker)，与 0.96624 锚点 blend
+**来源**: suman2208/ple-stacker (LB=0.96654), rhythmghai (LB=0.96536)
+
+**复现结果**:
+- PLE stacker: 无 PyTorch，用 GBSA(400)+RSF(500)+XGBoost IPCW 简单平均替代 PLE 网络
+- Ridge stacker: GBSA(500)+RSF(600) + IPCW Ridge meta — Ridge 过拟合产生大量零值
+- PLE avg p48 Spearman vs 0.96624 = 0.968 (排序有实质差异，ELIGIBLE)
+
+**Blend 候选** (w = 0.96624 权重):
+- w=0.8: p48 rho_vs_ref=0.9967, 提交中...
+- w=0.7: p48 rho_vs_ref=0.9948, 待 w=0.8 结果后决定
+- w=0.5: p48 rho_vs_ref=0.9886, 暂不提交(风险过高)
+
+**提交记录**:
+- w=0.8: LB=TBD (待提交)
