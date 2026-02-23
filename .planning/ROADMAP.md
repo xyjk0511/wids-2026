@@ -46,8 +46,8 @@ Plans:
 **Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md — Track 1: Reproduction tooling + user notebook identification
-- [ ] 04-02-PLAN.md — Track 2+3: Multi-anchor blend + RSF hyperparam grid
+- [x] 04-01-PLAN.md — Track 1: Reproduction tooling + suman2208 fork: LB=0.96086 (< gate, stop-loss triggered)
+- [ ] 04-02-PLAN.md — Track 3: RSF hyperparam grid (active)
 
 **分阶段目标**: LB > 0.9685 → LB > 0.970 → 0.975 (stretch)
 **Success**: 新锚点 LB > 0.968
