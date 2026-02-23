@@ -43,11 +43,12 @@ Plans:
 ### Phase 4: 更强锚点获取/复现
 **Goal**: 获取或复现比 0.96624 更强的基础预测
 **Requirements**: ANCHOR-01 (Reproduction), ANCHOR-02 (Blending), ANCHOR-03 (Hyperparam Grid)
-**Plans:** 2/2 plans complete
+**Plans:** 3 plans (2 complete + 1 gap closure)
 
 Plans:
 - [x] 04-01-PLAN.md — Track 1: Reproduction tooling + suman2208 fork: LB=0.96086 (< gate, stop-loss triggered)
 - [x] 04-02-PLAN.md — Track 3: RSF hyperparam grid: LB=0.91089/0.90860 (catastrophic, pipeline inconsistency, phase closed)
+- [ ] 04-03-PLAN.md — Gap closure: fix pipeline parity in exp30_hyperparam_grid.py + re-run grid
 
 **分阶段目标**: LB > 0.9685 → LB > 0.970 → 0.975 (stretch)
 **Success**: 新锚点 LB > 0.968
