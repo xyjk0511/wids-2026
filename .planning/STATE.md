@@ -1,6 +1,6 @@
 # Project State — WiDS 2026
 
-## Current Phase: 3 (Conformal Calibration) — CLOSED (止损)
+## Current Phase: 4 (更强锚点获取/复现) — IN PROGRESS
 ## Milestone: 1 (先破 0.9685，再谈 0.975)
 
 ## Progress
@@ -12,7 +12,8 @@
 - [x] Phase 2 Plan 01: IPCW stacking — CLOSED (no signal, OOF hybrid=0.96108 < 0.9697 gate)
 - [x] Phase 2 Plan 02: Calibration — CLOSED (LB=0.96338, OOF +0.0059 but LB -0.00445)
 - [x] Phase 3: Conformal Calibration — CLOSED (止损，OOF+0.0071但rho=1.0，不提交)
-- [ ] Phase 4: 更强锚点获取/复现
+- [x] Phase 4 Plan 01: Reproduction tooling — DONE (Task 2 complete, Task 1 checkpoint pending user)
+- [ ] Phase 4 Plan 02: TBD
 
 ## Key Metrics
 - PB: 0.96783 (Exp23, 2026-02-20)
@@ -33,6 +34,8 @@
 - Exp33 conformal止损: OOF+0.0071但rho=1.0排序不变, 与Exp32同模式, 不提交
 - 校准天花板: logit线性/Platt参数/非参数分位数三类校准均无法在LB超越锚点后处理
 - 新提交门槛: 仅允许改变排序且有稳定性证据的方案
+- 04-01: Task 2 executed before Task 1 (tooling independent of notebook artifacts)
+- 04-01: Blend eligibility threshold = Spearman rho < 0.99 on any horizon
 
-## Stopped At: Phase 3 CLOSED (止损), ready for Phase 4 (更强锚点)
-## Last Updated: 2026-02-22
+## Stopped At: Phase 4 Plan 01 — checkpoint:human-action (Task 1: fork Kaggle notebooks)
+## Last Updated: 2026-02-23
