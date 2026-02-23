@@ -1,29 +1,62 @@
-# Phase 4 Context: 更强锚点获取/复现
+# Phase 4: 更强锚点获取/复现 - Context
 
-## 锁定决策
+**Gathered:** 2026-02-23
+**Status:** Ready for planning
 
-1. **三条 Track 按顺序执行**，Track 1 是前置条件
-2. **不做花式改动**：精确复现优先，不加特征/不改模型结构
-3. **分阶段目标**: LB > 0.9685 → LB > 0.970 → 0.975 (stretch)
-4. **提交门槛**: 仅允许改变排序且有稳定性证据的方案
+<domain>
+## Phase Boundary
 
-## Track 1: 公开高分 pipeline 精确复现
-- 锁定 2-3 个 0.966+ 来源
-- 严格对齐: 特征集/CV策略/seed/sksurv版本/后处理
-- 目标: 拿到可迁移的新锚点
+获取比 0.96624 更强的基础预测（LB > 0.968）。
+三条 Track：Track 1 = Kaggle 原始 notebook 运行，Track 2 = 多锚点 blend，Track 3 = 超参网格。
+本地模型复现（exp30-33）已证明无效，不再尝试。
 
-## Track 2: 多锚点融合
-- 前置: Track 1 产出至少 1 个与 0.96624 排序不完全同质的锚点
-- 方法: rank average + weight search
-- 仅在 Spearman < 0.99 的锚点对上做 blend
+</domain>
 
-## Track 3: 版本与关键超参小网格
-- 前置: Track 1 复现成功
-- 范围: sksurv 版本 + RSF 关键超参 (n_estimators, max_features, min_samples_leaf)
-- 不做大范围盲搜
+<decisions>
+## Implementation Decisions
 
-## Phase 1-3 教训
-- 221 样本上模型侧改进无法超越锚点后处理
-- 校准天花板已触及 (logit线性/Platt/非参数三类均失败)
-- OOF 改善不等于 LB 改善 (Exp32: OOF+0.0059→LB-0.00445)
-- rho=1.0 的方案不值得提交 (排序不变=CI不变)
+### Track 1 转向策略
+- 不做本地复现，直接在 Kaggle 上 fork + run 原始 notebook
+- 两个目标：suman2208/ple-stacker (LB=0.96654) 和 rhythmghai/ridge-stacker (LB=0.96536)
+- 仅加 OOF 输出行，其余代码不动
+- 输出：submission.csv + OOF 预测（用于 blend 相关性分析）
+
+### Blend 有效性条件
+- rho 门槛：新锚点 vs 0.96624 的 Spearman rho < 0.99 即可 blend
+- LB 门槛：新锚点 LB 必须 > 0.96624，否则 blend 无意义
+- Blend 方法：value-space weighted blend
+- 权重确定：OOF 驱动（用 OOF 相关性/质量决定权重）
+
+### 提交预算分配
+- 每天上限：5 次
+- 优先级：Track 1 优先，最多用 5 次提交
+- Track 1 止损：5 次后若无 LB > 0.96624 的新锚点，切换到 Track 3
+- Track 3 规模：大网格 10+ 次（sksurv 版本 + RSF 超参全面扫描）
+
+### Claude's Discretion
+- Track 3 具体超参范围（n_estimators, max_features, min_samples_leaf 的网格点）
+- OOF 权重的具体计算公式
+- Kaggle notebook fork 的操作步骤
+
+</decisions>
+
+<specifics>
+## Specific Ideas
+
+- Track 1 的核心价值：拿到原始 notebook 的精确预测，而非本地近似复现
+- exp30-33 教训：本地复现的模型全部是噪声（最好的 blend 也只有 0.96540 < 0.96624）
+- Track 3 是 Track 1 失败后的主要备选，不是并行方向
+
+</specifics>
+
+<deferred>
+## Deferred Ideas
+
+- 无 — 讨论范围保持在 Phase 04 边界内
+
+</deferred>
+
+---
+
+*Phase: 04-stronger-anchor*
+*Context gathered: 2026-02-23*
