@@ -47,7 +47,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Track 1: Reproduction tooling + suman2208 fork: LB=0.96086 (< gate, stop-loss triggered)
-- [ ] 04-02-PLAN.md — Track 3: RSF hyperparam grid (active)
+- [x] 04-02-PLAN.md — Track 3: RSF hyperparam grid: LB=0.91089/0.90860 (catastrophic, pipeline inconsistency, phase closed)
 
 **分阶段目标**: LB > 0.9685 → LB > 0.970 → 0.975 (stretch)
 **Success**: 新锚点 LB > 0.968

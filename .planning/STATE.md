@@ -13,7 +13,7 @@
 - [x] Phase 2 Plan 02: Calibration — CLOSED (LB=0.96338, OOF +0.0059 but LB -0.00445)
 - [x] Phase 3: Conformal Calibration — CLOSED (止损，OOF+0.0071但rho=1.0，不提交)
 - [x] Phase 4 Plan 01: Reproduction tooling + Track 1 — CLOSED (LB=0.96086 < gate, stop-loss triggered, Track 1 closed)
-- [x] Phase 4 Plan 02: Track 2+3 blend gates + hyperparam grid — CLOSED (grid done, awaiting Kaggle LB)
+- [x] Phase 4 Plan 02: Track 2+3 blend gates + hyperparam grid — CLOSED (LB=0.91089/0.90860 catastrophic, pipeline inconsistency, phase 4 fully closed)
 
 ## Key Metrics
 - PB: 0.96783 (Exp23, 2026-02-20)
@@ -39,8 +39,8 @@
 - Switching to Track 3 (04-02): RSF hyperparam grid
 - 04-01: Task 2 executed before Task 1 (tooling independent of notebook artifacts)
 - 04-01: Blend eligibility threshold = Spearman rho < 0.99 on any horizon
-- 04-02: Grid sorted by rho deviation — n=500/sqrt/msl=3 top candidate (rho_p48=0.9710)
-- 04-02: sksurv 0.22.2 version gap confirmed vs 0.96624 anchor
+- Track 3 grid failed: distribution compressed (std=0.102 vs ref 0.364), LB=0.91089/0.90860 — pipeline inconsistency, not hyperparameter choice
+- Phase 4 fully closed: both tracks failed to exceed 0.96624; current best remains 0.96624/0.96681
 
-## Stopped At: Phase 4 Plan 02 — checkpoint:human-verify (Task 3, awaiting Kaggle LB)
+## Stopped At: Phase 4 complete — all plans closed, awaiting next phase planning
 ## Last Updated: 2026-02-23
