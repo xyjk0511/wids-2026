@@ -63,37 +63,46 @@ def eval_sf(surv_fns, n):
     return probs
 
 
-def postprocess(p):
-    r = {12: np.clip(p[12], 0.01, 0.99), 24: p[24].copy()}
-    r[48] = np.maximum(p[48], r[24])
-    r[72] = np.ones(len(p[72]))
+def submission_postprocess(p):
+    # Round 1: mono chain, 72h=1.0, clip
+    r = {}
+    r[12] = np.clip(p[12], 0.01, 0.99)
+    prev = p[24]
+    r[24] = prev
+    for t in [48, 72]:
+        current = np.maximum(p[t], prev)
+        r[t] = current
+        prev = current
+    r[72] = np.ones(len(r[72]))
     for t in [24, 48]:
         r[t] = np.clip(r[t], 0.01, 0.99)
+    # Round 2: row-level 12<=24<=48<=72, then clip
     n = len(r[12])
     for i in range(n):
-        prev = 0.0
+        prev_val = 0.0
         for t in EVAL_TIMES:
-            r[t][i] = max(r[t][i], prev); prev = r[t][i]
+            val = max(r[t][i], prev_val)
+            r[t][i] = val
+            prev_val = val
     for t in EVAL_TIMES:
         r[t] = np.clip(r[t], 0.01, 1.0 if t == 72 else 0.99)
     return r
 
 
 def run_config(rsf_cfg, X_train, y_struct, X_test, test_ids, ref_sub, label, out_path=None):
+    # RSF-only: GBSA in sksurv 0.22.2 produces compressed outputs (std~0.10)
     rsf = RandomSurvivalForest(**{**RSF_BASE, **rsf_cfg})
     rsf.fit(X_train, y_struct)
-    gbsa = GradientBoostingSurvivalAnalysis(**GBSA_CFG)
-    gbsa.fit(X_train, y_struct)
 
     n = X_test.shape[0]
     rp = eval_sf(rsf.predict_survival_function(X_test), n)
-    gp = eval_sf(gbsa.predict_survival_function(X_test), n)
-    blended = {t: 0.2 * rp[t] + 0.8 * gp[t] for t in EVAL_TIMES}
-    pp = postprocess(blended)
+    pp = submission_postprocess(rp)
 
     sub = pd.DataFrame({"event_id": test_ids,
                         "prob_12h": pp[12], "prob_24h": pp[24],
                         "prob_48h": pp[48], "prob_72h": pp[72]})
+    std48 = sub["prob_48h"].std()
+    print(f"    prob_48h std={std48:.4f}" + (" WARNING: distribution compressed" if std48 < 0.20 else ""))
 
     rho48, _ = spearmanr(sub["prob_48h"].values,
                          ref_sub.set_index("event_id").loc[test_ids]["prob_48h"].values)
