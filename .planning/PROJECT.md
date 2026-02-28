@@ -1,10 +1,10 @@
-# WiDS 2026 Kaggle — 后处理优化突破 0.975
+# WiDS 2026 Kaggle — 复现公开高分方法突破 0.975
 
 ## Vision
-通过系统化后处理空间搜索,从 PB=0.96783 突破到 0.975+。
+复现 Public LB 0.97092/0.98088 的公开方法,从 PB=0.96783 突破到 0.975+。
 
 ## Core Value
-**后处理优先**: Phase 1-4 证明 221 样本下模型侧改进无效。所有优化聚焦于后处理变换空间。
+**方法论升级**: 发现 LB 最高 0.98088,证明不是 221 样本限制,而是方法论代差。核心是 **GBSA 50-model ensemble + IPCW LightGBM**,而非后处理优化。
 
 ## Current State
 - **PB**: 0.96783 (Exp23 gate calibration)
@@ -15,15 +15,17 @@
 - **Submissions remaining**: >20
 
 ## 已验证的失败方向 (Stop-Loss)
-1. **模型侧改进**: LR/XGB head, IPCW stacking, Calibration 全部失败
-2. **锚点复现**: PLE fork, RSF grid 全部失败
-3. **核心教训**: 221 样本下 meta-learning 无法从 CV 迁移到 LB
+1. **模型侧改进**: LR/XGB head 实现方式错误
+2. **IPCW stacking**: Exp31 失败,但 0.97092 成功 (实现差异)
+3. **后处理校准**: Exp32/33 过拟合,0.97036 证明 Temperature Scaling 也过拟合
+4. **锚点复现**: PLE fork, RSF grid 方向错误
 
-## 新战略方向
-1. **非线性变换**: log/sqrt/power/sigmoid/quantile
-2. **排名优化**: 基于排名而非概率值的后处理
-3. **集成策略**: 多后处理策略集成
-4. **约束优化**: 分布匹配,单调性权重优化
+## 新战略方向 (基于 0.97092/0.98088)
+1. **GBSA 50-model ensemble**: 5 configs × 10 seeds (最大单项差异 +0.002-0.004)
+2. **LightGBM IPCW per-horizon**: 24h/48h 独立分类器 (+0.001-0.002)
+3. **5km hard cutoff**: 利用物理规律 (+0.002-0.004)
+4. **PowerCal24**: Power transform (+0.003-0.005)
+5. **Seeds 增加**: 10 → 15 (+0.0005-0.001)
 
 ## Key Constraints
 - 221 train / 95 test samples — extreme small-data regime
