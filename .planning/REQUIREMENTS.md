@@ -1,39 +1,50 @@
 # Requirements — WiDS 2026
 
-**Defined:** 2026-02-28 (重构后)
-**Core Value:** 后处理优先 — 221 样本下模型侧改进无效
+**Defined:** 2026-02-28 (v3 - GBSA 方向)
+**Core Value:** 方法论升级 — 复现 0.97092/0.98088 的 GBSA ensemble + IPCW 架构
 
 ---
 
-## v1 Requirements (后处理优化)
+## v3 Requirements (GBSA 复现方向)
 
-### 非线性变换 (POST)
+### GBSA Ensemble (Phase 5)
 
-- [ ] **POST-01**: 实现 5+ 种非线性变换函数 (log/sqrt/power/sigmoid/quantile mapping)
-- [ ] **POST-02**: 每种变换在 24h/48h 上独立优化参数 (grid search 或 Bayesian optimization)
-- [ ] **POST-03**: 通过 Spearman rho vs 0.96624 筛选候选 (rho < 0.98 确保多样性)
-- [ ] **POST-04**: LB 验证 top-3 变换候选
+- [ ] **GBSA-01**: 实现 5 configs × 10 seeds = 50 GBSA models
+- [ ] **GBSA-02**: OOF hybrid score > 0.970 (门槛)
+- [ ] **GBSA-03**: LB > 0.968 (验证复现成功)
 
-### 排名优化 (RANK)
+### IPCW LightGBM (Phase 6)
 
-- [ ] **RANK-01**: 实现 rank-based postprocessing (保留排名,映射到目标分布)
-- [ ] **RANK-02**: 集成 Phase 5 的多个候选 (weighted average/stacking/voting)
-- [ ] **RANK-03**: 时间点权重优化 (针对 WBrier 公式 0.3×B@24h + 0.4×B@48h + 0.3×B@72h)
+- [ ] **IPCW-01**: 实现 IPCW 权重计算 (Kaplan-Meier)
+- [ ] **IPCW-02**: 训练 24h/48h 独立 LightGBM 分类器
+- [ ] **IPCW-03**: Asymmetric blend (W_GBSA_24=0.95, W_GBSA_48=0.55)
 
-### 分布优化 (DIST)
+### 增量改进 (Phase 7)
 
-- [ ] **DIST-01**: 分布约束后处理 (匹配 training set 经验分布)
-- [ ] **DIST-02**: 优化单调性约束权重 (当前 [1.0, 1.0, 10.0])
-- [ ] **DIST-03**: Bootstrap aggregating (221 样本 bootstrap 生成多个后处理版本)
-
-### 伪标签 (PSEUDO) — Stretch Goal
-
-- [ ] **PSEUDO-01**: 高置信度 test 样本伪标签生成
-- [ ] **PSEUDO-02**: 迭代优化后处理参数 (使用伪标签)
+- [ ] **INCR-01**: 5km hard cutoff (利用物理规律)
+- [ ] **INCR-02**: PowerCal24 grid search (power transform)
+- [ ] **INCR-03**: Seeds 增加到 15
 
 ---
 
-## v2 Requirements (已验证无效,归档)
+## v2 Requirements (后处理优化 - 已废弃)
+
+### 非线性变换 (POST) - 已废弃
+
+- **POST-01**: 实现 5+ 种非线性变换函数 — 被 GBSA-01 替代
+- **POST-02**: 每种变换在 24h/48h 上独立优化参数 — 被 IPCW-02 替代
+- **POST-03**: 通过 Spearman rho vs 0.96624 筛选候选 — 被 GBSA-02 替代
+- **POST-04**: LB 验证 top-3 变换候选 — 被 GBSA-03 替代
+
+### 排名优化 (RANK) - 已废弃
+
+- **RANK-01**: 实现 rank-based postprocessing — 方向错误
+- **RANK-02**: 集成 Phase 5 的多个候选 — 方向错误
+- **RANK-03**: 时间点权重优化 — 被 IPCW-03 替代
+
+---
+
+## v1 Requirements (已验证无效,归档)
 
 ### 模型侧改进 (已关闭)
 - **MODEL-01**: LR/XGB head — LB < baseline
@@ -61,25 +72,22 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| POST-01 | Phase 5 | Pending |
-| POST-02 | Phase 5 | Pending |
-| POST-03 | Phase 5 | Pending |
-| POST-04 | Phase 5 | Pending |
-| RANK-01 | Phase 6 | Pending |
-| RANK-02 | Phase 6 | Pending |
-| RANK-03 | Phase 6 | Pending |
-| DIST-01 | Phase 7 | Pending |
-| DIST-02 | Phase 7 | Pending |
-| DIST-03 | Phase 7 | Pending |
-| PSEUDO-01 | Phase 8 | Pending |
-| PSEUDO-02 | Phase 8 | Pending |
+| GBSA-01 | Phase 5 | Pending |
+| GBSA-02 | Phase 5 | Pending |
+| GBSA-03 | Phase 5 | Pending |
+| IPCW-01 | Phase 6 | Pending |
+| IPCW-02 | Phase 6 | Pending |
+| IPCW-03 | Phase 6 | Pending |
+| INCR-01 | Phase 7 | Pending |
+| INCR-02 | Phase 7 | Pending |
+| INCR-03 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 12 total
-- Mapped to phases: 12
+- v3 requirements: 9 total
+- Mapped to phases: 9
 - Unmapped: 0 ✓
 
 ---
 
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after Phase 1-4 failure analysis*
+*Last updated: 2026-02-28 v3 - switched to GBSA replication strategy*

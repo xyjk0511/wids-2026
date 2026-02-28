@@ -1,6 +1,6 @@
 # Project State — WiDS 2026
 
-## Current Phase: 4 (更强锚点获取/复现) — IN PROGRESS
+## Current Phase: 5 (GBSA 50-Model Ensemble) — IN PROGRESS
 ## Milestone: 1 (先破 0.9685，再谈 0.975)
 
 ## Progress
@@ -42,5 +42,5 @@
 - Track 3 grid failed: distribution compressed (std=0.102 vs ref 0.364), LB=0.91089/0.90860 — pipeline inconsistency, not hyperparameter choice
 - Phase 4 fully closed: both tracks failed to exceed 0.96624; current best remains 0.96624/0.96681
 
-## Stopped At: Phase 4 complete — all plans closed, awaiting next phase planning
-## Last Updated: 2026-02-23
+## Stopped At: Phase 5 started — GBSA ensemble quick validation (2 configs × 5 seeds)
+## Last Updated: 2026-02-28
