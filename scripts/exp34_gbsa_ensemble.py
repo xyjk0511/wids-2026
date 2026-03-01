@@ -237,7 +237,7 @@ def append_to_experiments_md(mode, oof_score, lb_score, config_summary, ablation
     if lb_score:
         entry += f"- **LB Score**: {lb_score:.5f}\n"
     else:
-        entry += f"- **LB Score**: (pending submission)\n"
+        entry += "- **LB Score**: (pending submission)\n"
     entry += f"- **Config**: {config_summary}\n"
     entry += f"- **Gate**: {'✓ PASS' if (mode == 'quick' and oof_score >= 0.965) or (mode == 'full' and oof_score >= 0.970) else '✗ FAIL'}\n"
     entry += "\n"
