@@ -218,7 +218,7 @@ def save_submission(test_preds, test, mode="quick", ablation=None):
     suffix = f"_exp34_{mode}"
     if ablation:
         suffix += f"_{ablation}"
-    filename = SUBMISSION_PATH.replace(".csv", f"{suffix}.csv")
+    filename = str(SUBMISSION_PATH).replace(".csv", f"{suffix}.csv")
     sub.to_csv(filename, index=False)
     print(f"Submission saved: {filename}\n")
     return filename
