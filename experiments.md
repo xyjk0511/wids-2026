@@ -248,3 +248,30 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 
 **提交记录**:
 - w=0.8: LB=TBD (待提交)
+
+## Exp34: GBSA 50-Model Ensemble (2026-02-28)
+
+**Phase 5 实验结果**
+
+| 模式 | 模型数 | OOF Hybrid | OOF CI | OOF WBrier | Kaggle LB | 备注 |
+|------|-------|------------|--------|------------|-----------|------|
+| Quick | 10 | 0.97232 | 0.94137 | 0.01442 | - | Gate PASS (≥0.965) |
+| Full | 50 | 0.97257 | 0.94237 | 0.01448 | 0.96600 | Gate PASS (≥0.970) |
+
+**配置**: 
+- 5 configs × 10 seeds = 50 models
+- dropout_rate=0.0 (复现0.97092核心参数)
+- Feature level: medium (36 features)
+
+**关键发现**:
+1. **OOF vs LB 严重脱钩**: OOF 0.97257 (超过PB的0.96783达+0.00474)，但LB 0.96600 (-0.00183 vs PB)
+2. **OOF-LB gap 扩大**: 从典型的0.010扩大到0.016 (+60%)
+3. **GBSA泛化问题**: GBSA在train/OOF上表现优异，但在hidden test上泛化弱于RSF
+4. **50模型集成边际收益递减**: Quick(10模型) → Full(50模型) 仅+0.00025 OOF，LB未验证
+
+**结论**:
+- GBSA 50-model ensemble 不是突破口
+- OOF高估严重，模型复杂度增加未带来LB提升
+- 需重新评估GBSA方向，可能回归RSF为主的策略
+
+**文件**: `submissions/submission_exp34_full.csv`
