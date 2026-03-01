@@ -262,7 +262,7 @@ def main():
 
     # Load data
     train, test = load_data()
-    feature_cols = get_feature_set(FEATURE_LEVEL)
+    feature_cols = get_feature_set(train, FEATURE_LEVEL)
 
     # Select configs and seeds
     configs = QUICK_CONFIGS if args.mode == "quick" else FULL_CONFIGS

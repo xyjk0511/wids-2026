@@ -55,7 +55,7 @@ fi
 # 升级 pip
 echo ""
 echo "Upgrading pip..."
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # 安装核心依赖
 echo ""
