@@ -93,6 +93,83 @@ def add_engineered(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_engineered_0_97092(df: pd.DataFrame) -> pd.DataFrame:
+    """Add 0.97092 distance-oriented features (30+ features).
+
+    精确复现 0.97092 notebook 的 create_features()，
+    不做 remove_redundant()，直接在原始列上追加距离交互特征。
+    """
+    df = df.copy()
+
+    dist_safe = df["dist_min_ci_0_5h"].clip(lower=1.0)
+    area_sqrt = np.sqrt(df["area_first_ha"].clip(lower=1e-6))
+    speed_safe = df["closing_speed_m_per_h"].clip(lower=0.1)
+    wind_safe = df["wind_speed_m_per_s"].clip(lower=0.1) if "wind_speed_m_per_s" in df.columns else pd.Series(1.0, index=df.index)
+    temp_safe = df["temp_c"].clip(lower=0.1) if "temp_c" in df.columns else pd.Series(20.0, index=df.index)
+    humidity_safe = df["humidity_percent"].clip(lower=1.0) if "humidity_percent" in df.columns else pd.Series(50.0, index=df.index)
+
+    # === Core distance features ===
+    df["log_dist"] = np.log1p(df["dist_min_ci_0_5h"])
+    df["inv_dist"] = 1.0 / dist_safe
+    df["dist_close"] = (df["dist_min_ci_0_5h"] < 5000).astype(int)
+
+    # === Distance-area interactions ===
+    df["dist_area_ratio"] = dist_safe / area_sqrt
+    df["inv_dist_area"] = df["inv_dist"] * area_sqrt
+
+    # === Distance-speed interactions ===
+    df["speed_dist_ratio"] = speed_safe / dist_safe
+    df["eta_hours"] = dist_safe / speed_safe
+    df["log_eta"] = np.log1p(df["eta_hours"])
+
+    # === Distance-alignment interactions ===
+    df["dist_alignment"] = df["log_dist"] * df["alignment_abs"]
+    df["inv_dist_alignment"] = df["inv_dist"] * df["alignment_abs"]
+
+    # === Distance-growth interactions ===
+    df["growth_dist_ratio"] = df["area_growth_rate_ha_per_h"] / dist_safe
+    df["has_growth"] = (df["area_growth_abs_0_5h"] > 0).astype(int)
+    df["inv_dist_growth"] = df["inv_dist"] * (1 + df["area_growth_rate_ha_per_h"])
+
+    # === Distance-wind interactions (fallback if no wind column) ===
+    df["wind_dist_ratio"] = wind_safe / dist_safe
+    df["inv_dist_wind"] = df["inv_dist"] * wind_safe
+
+    # === Distance-temperature interactions (fallback if no temp column) ===
+    df["temp_dist_ratio"] = temp_safe / dist_safe
+
+    # === Distance-humidity interactions (fallback if no humidity column) ===
+    df["humidity_dist_ratio"] = humidity_safe / dist_safe
+    df["inv_dist_dryness"] = df["inv_dist"] * (100.0 / humidity_safe)
+
+    # === Composite threat scores ===
+    df["threat_score_1"] = df["inv_dist"] * df["speed_dist_ratio"] * area_sqrt
+    df["threat_score_2"] = df["inv_dist"] * df["growth_dist_ratio"] * df["alignment_abs"]
+    df["threat_score_3"] = df["inv_dist"] * df["wind_dist_ratio"] * (100.0 / humidity_safe)
+
+    # === Distance bins ===
+    df["dist_bin"] = pd.cut(
+        df["dist_min_ci_0_5h"],
+        bins=[0, 1000, 2000, 5000, 10000, np.inf],
+        labels=[0, 1, 2, 3, 4],
+    ).astype(int)
+
+    # === Log-scale features ===
+    df["log_area"] = np.log1p(df["area_first_ha"])
+    df["log_speed"] = np.log1p(df["closing_speed_m_per_h"].clip(lower=0.0))
+
+    return df
+
+
+def get_feature_cols_0_97092(df: pd.DataFrame) -> list[str]:
+    """Return feature columns for the 0.97092 feature set.
+
+    Excludes ID, time, and event columns from the 0.97092-engineered DataFrame.
+    """
+    exclude = {"event_id", "time_to_hit_hours", "event"}
+    return [c for c in df.columns if c not in exclude]
+
+
 def get_feature_set(df: pd.DataFrame, level: str = "medium") -> list[str]:
     """Return feature column names for the given level.
 

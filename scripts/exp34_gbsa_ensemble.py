@@ -16,15 +16,14 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 
 from src.config import (
     TRAIN_PATH, TEST_PATH, SUBMISSION_PATH,
     ID_COL, TIME_COL, EVENT_COL, HORIZONS, PROB_COLS,
-    N_SPLITS, N_REPEATS, RANDOM_STATE,
 )
-from src.features import remove_redundant, add_engineered, get_feature_set
+from src.features import remove_redundant, add_engineered, add_engineered_0_97092, get_feature_cols_0_97092
 from src.evaluation import hybrid_score
 from src.models import GBSA
 
@@ -58,7 +57,7 @@ ABLATION_SEEDS_3 = [42, 43, 44]
 ABLATION_SEEDS_5 = [42, 43, 44, 45, 46]
 ABLATION_SEEDS_10 = list(range(42, 52))
 
-FEATURE_LEVEL = "medium"
+FEATURE_LEVEL = "0.97092"
 
 
 def load_data(feature_level=None):
@@ -67,7 +66,11 @@ def load_data(feature_level=None):
     train = pd.read_csv(TRAIN_PATH)
     test = pd.read_csv(TEST_PATH)
 
-    if feature_level == "v96624":
+    if feature_level == "0.97092":
+        # 精确复现 0.97092：所有原始特征 + 30+ 距离导向特征，不做 remove_redundant
+        train = add_engineered_0_97092(train)
+        test = add_engineered_0_97092(test)
+    elif feature_level == "v96624":
         train = add_engineered(train)
         test = add_engineered(test)
     else:  # medium
@@ -82,20 +85,26 @@ def _strat_labels(y_time, y_event):
     return y_event.astype(int)
 
 
-def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout_rate=0.0):
+def run_gbsa_ensemble(train, test, feature_cols, configs, seeds, mode="quick", dropout_rate=0.0):
     """Run GBSA multi-config ensemble with OOF predictions.
 
+    0.97092 精确复现：
+    - 5-fold StratifiedKFold（按 event 分层，每个 seed 独立 CV）
+    - 每个 seed × 每个 fold 训练一个模型
+    - OOF 和 test 预测跨所有模型平均
+
     Args:
-        train: Training dataframe
-        feature_cols: List of feature column names
-        configs: List of GBSA config dicts
-        seeds: List of random seeds
-        mode: "quick" or "full"
-        dropout_rate: GBSA dropout rate (0.0 for 0.97092, 0.1 for ablation)
+        train: 已完成特征工程的训练集 DataFrame
+        test: 已完成特征工程（与 train 相同流程）的测试集 DataFrame
+        feature_cols: 特征列名列表
+        configs: GBSA 超参配置列表
+        seeds: 随机种子列表
+        mode: "quick" 或 "full"
+        dropout_rate: GBSA dropout rate (0.97092 = 0.0)
 
     Returns:
-        oof_preds: {horizon: oof_array} averaged across all models
-        test_preds: {horizon: test_array} averaged across all models
+        oof_preds: {horizon: oof_array}
+        test_preds: {horizon: test_array}
     """
     X = train[feature_cols]
     y_time = train[TIME_COL].values
@@ -105,17 +114,11 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
     oof_preds = {h: np.zeros(n) for h in HORIZONS}
     oof_counts = np.zeros(n)
 
-    # Load test data
-    test = pd.read_csv(TEST_PATH)
-    test = add_engineered(remove_redundant(test))
     X_test = test[feature_cols]
     test_preds = {h: np.zeros(len(test)) for h in HORIZONS}
+    test_fold_count = 0
 
     strat = _strat_labels(y_time, y_event)
-    rskf = RepeatedStratifiedKFold(
-        n_splits=N_SPLITS, n_repeats=N_REPEATS,
-        random_state=RANDOM_STATE,
-    )
 
     total_models = len(configs) * len(seeds)
     model_idx = 0
@@ -123,6 +126,7 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
     print(f"\n{'='*60}")
     print(f"GBSA Ensemble - {mode.upper()} mode")
     print(f"Configs: {len(configs)}, Seeds: {len(seeds)}, Total: {total_models} models")
+    print("CV: 5-fold StratifiedKFold per seed (0.97092 style)")
     print(f"Dropout rate: {dropout_rate}")
     print(f"{'='*60}\n")
 
@@ -133,8 +137,10 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
             model_idx += 1
             print(f"  Model {model_idx}/{total_models} (seed={seed})...", end=" ", flush=True)
 
-            # CV loop for this model
-            for fold_idx, (tr_idx, va_idx) in enumerate(rskf.split(X, strat), 1):
+            # 0.97092: 每个 seed 用独立的 StratifiedKFold(5, random_state=seed)
+            skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
+
+            for fold_idx, (tr_idx, va_idx) in enumerate(skf.split(X, strat), 1):
                 X_tr, X_va = X.iloc[tr_idx], X.iloc[va_idx]
                 yt_tr = y_time[tr_idx]
                 ye_tr = y_event[tr_idx]
@@ -144,13 +150,12 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
                 X_va_s = pd.DataFrame(scaler.transform(X_va), columns=feature_cols, index=X_va.index)
                 X_test_s = pd.DataFrame(scaler.transform(X_test), columns=feature_cols, index=X_test.index)
 
-                # CRITICAL: dropout_rate configurable (P5-18 ablation)
                 gbsa = GBSA(
                     n_estimators=cfg['n'],
                     max_depth=3,
                     learning_rate=cfg['lr'],
                     subsample=cfg['ss'],
-                    dropout_rate=dropout_rate,  # 0.0 for 0.97092, 0.1 for ablation
+                    dropout_rate=dropout_rate,
                     random_state=seed,
                 )
                 gbsa.model.min_samples_leaf = cfg['msl']
@@ -164,6 +169,7 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
                     test_preds[h] += preds_test[h]
 
                 oof_counts[va_idx] += 1
+                test_fold_count += 1
 
             print("done")
 
@@ -172,10 +178,9 @@ def run_gbsa_ensemble(train, feature_cols, configs, seeds, mode="quick", dropout
         mask = oof_counts > 0
         oof_preds[h][mask] /= oof_counts[mask]
 
-    # Average test predictions (total_models * N_SPLITS * N_REPEATS folds)
-    n_folds = N_SPLITS * N_REPEATS
+    # Average test predictions across all (configs × seeds × 5 folds)
     for h in HORIZONS:
-        test_preds[h] /= (total_models * n_folds)
+        test_preds[h] /= test_fold_count
 
     return oof_preds, test_preds
 
@@ -260,16 +265,18 @@ def main():
     print(f"Exp34: GBSA Ensemble - {args.mode.upper()} mode")
     print(f"{'='*60}\n")
 
-    # Load data
+    # Load data (0.97092 特征集)
     train, test = load_data()
-    feature_cols = get_feature_set(train, FEATURE_LEVEL)
+    feature_cols = get_feature_cols_0_97092(train)
+    print(f"Feature count: {len(feature_cols)}")
+    print(f"First 10 features: {feature_cols[:10]}")
 
     # Select configs and seeds
     configs = QUICK_CONFIGS if args.mode == "quick" else FULL_CONFIGS
     seeds = QUICK_SEEDS if args.mode == "quick" else FULL_SEEDS
 
-    # Run ensemble
-    oof_preds, test_preds = run_gbsa_ensemble(train, feature_cols, configs, seeds, mode=args.mode)
+    # Run ensemble (传入 test，修复旧版硬编码 medium 的 bug)
+    oof_preds, test_preds = run_gbsa_ensemble(train, test, feature_cols, configs, seeds, mode=args.mode)
 
     # Evaluate
     y_time = train[TIME_COL].values

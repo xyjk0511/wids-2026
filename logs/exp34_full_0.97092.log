@@ -1,0 +1,88 @@
+
+============================================================
+Exp34: GBSA Ensemble - FULL mode
+============================================================
+
+Feature count: 58
+First 10 features: ['num_perimeters_0_5h', 'dt_first_last_0_5h', 'low_temporal_resolution_0_5h', 'area_first_ha', 'area_growth_abs_0_5h', 'area_growth_rel_0_5h', 'area_growth_rate_ha_per_h', 'log1p_area_first', 'log1p_growth', 'log_area_ratio_0_5h']
+
+============================================================
+GBSA Ensemble - FULL mode
+Configs: 5, Seeds: 10, Total: 50 models
+CV: 5-fold StratifiedKFold per seed (0.97092 style)
+Dropout rate: 0.0
+============================================================
+
+Config 1/5: lr=0.01, ss=0.7, msl=12, n=1200
+  Model 1/50 (seed=42)... done
+  Model 2/50 (seed=43)... done
+  Model 3/50 (seed=44)... done
+  Model 4/50 (seed=45)... done
+  Model 5/50 (seed=46)... done
+  Model 6/50 (seed=47)... done
+  Model 7/50 (seed=48)... done
+  Model 8/50 (seed=49)... done
+  Model 9/50 (seed=50)... done
+  Model 10/50 (seed=51)... done
+Config 2/5: lr=0.01, ss=0.85, msl=15, n=1200
+  Model 11/50 (seed=42)... done
+  Model 12/50 (seed=43)... done
+  Model 13/50 (seed=44)... done
+  Model 14/50 (seed=45)... done
+  Model 15/50 (seed=46)... done
+  Model 16/50 (seed=47)... done
+  Model 17/50 (seed=48)... done
+  Model 18/50 (seed=49)... done
+  Model 19/50 (seed=50)... done
+  Model 20/50 (seed=51)... done
+Config 3/5: lr=0.01, ss=0.6, msl=12, n=1200
+  Model 21/50 (seed=42)... done
+  Model 22/50 (seed=43)... done
+  Model 23/50 (seed=44)... done
+  Model 24/50 (seed=45)... done
+  Model 25/50 (seed=46)... done
+  Model 26/50 (seed=47)... done
+  Model 27/50 (seed=48)... done
+  Model 28/50 (seed=49)... done
+  Model 29/50 (seed=50)... done
+  Model 30/50 (seed=51)... done
+Config 4/5: lr=0.005, ss=0.85, msl=12, n=2000
+  Model 31/50 (seed=42)... done
+  Model 32/50 (seed=43)... done
+  Model 33/50 (seed=44)... done
+  Model 34/50 (seed=45)... done
+  Model 35/50 (seed=46)... done
+  Model 36/50 (seed=47)... done
+  Model 37/50 (seed=48)... done
+  Model 38/50 (seed=49)... done
+  Model 39/50 (seed=50)... done
+  Model 40/50 (seed=51)... done
+Config 5/5: lr=0.01, ss=0.85, msl=20, n=1400
+  Model 41/50 (seed=42)... done
+  Model 42/50 (seed=43)... done
+  Model 43/50 (seed=44)... done
+  Model 44/50 (seed=45)... done
+  Model 45/50 (seed=46)... done
+  Model 46/50 (seed=47)... done
+  Model 47/50 (seed=48)... done
+  Model 48/50 (seed=49)... done
+  Model 49/50 (seed=50)... done
+  Model 50/50 (seed=51)... done
+
+============================================================
+OOF Scores - FULL mode
+============================================================
+  Hybrid = 0.97216
+  CI     = 0.94129
+  WBrier = 0.01461
+============================================================
+
+Full Gate (OOF >= 0.97): ✓ PASS
+
+Submission saved: D:\wids\.claude\worktrees\phase-5\submissions\submission_exp34_full.csv
+
+============================================================
+✓ Full validation PASSED
+  → Submit to Kaggle for LB verification (target: LB > 0.968)
+============================================================
+
