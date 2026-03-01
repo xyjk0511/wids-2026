@@ -1,5 +1,5 @@
 import numpy as np
-from sksurv.metrics import concordance_index_censored
+from lifelines.utils import concordance_index as lifelines_cindex
 
 from src.config import HORIZONS
 
@@ -69,7 +69,7 @@ def c_index(
     y_event = np.asarray(y_event, dtype=bool)
     risk_scores = np.asarray(risk_scores, dtype=float)
 
-    ci, _, _, _, _ = concordance_index_censored(y_event, y_time, risk_scores)
+    ci = lifelines_cindex(y_time, -risk_scores, y_event)
     return float(ci)
 
 

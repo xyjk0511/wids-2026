@@ -24,11 +24,11 @@
 
 - **总火灾事件数**: 316个(均有早期perimeter观测和确认结果)
 
-| 数据集 | 样本数 | 特征数 |
-|--------|--------|--------|
-| train.csv | 221 | 34个特征 + 2个目标 + 1个ID |
-| test.csv | 95 | 34个特征 + 1个ID |
-| sample_submission.csv | 95 | 4个概率列 + 1个ID |
+| 数据集                | 样本数 | 特征数                     |
+| --------------------- | ------ | -------------------------- |
+| train.csv             | 221    | 34个特征 + 2个目标 + 1个ID |
+| test.csv              | 95     | 34个特征 + 1个ID           |
+| sample_submission.csv | 95     | 4个概率列 + 1个ID          |
 
 - **训练集标签分布**: 69个hits(event=1) + 152个censored(event=0)
 - **注意**: 数据集非常小, 需要特别注意过拟合问题
@@ -41,8 +41,10 @@
 
 ### temporal_coverage (3个) -- 时间覆盖
 
-- `num_perimeters_0_5h`: 前5小时内的perimeter数量
-- `dt_first_last_0_5h`: 首末perimeter时间跨度(小时)
+> **主办方澄清**: "perimeter" 指火灾边界的时间戳快照(fire perimeter snapshot), 不是疏散区或管辖区域。t0 定义为该火灾首次 perimeter 观测的时间戳。
+
+- `num_perimeters_0_5h`: 前5小时内的 perimeter 快照数量(即火灾边界被观测/绘制了几次)
+- `dt_first_last_0_5h`: 首末 perimeter 快照的时间跨度(小时), 仅1个快照时为0
 - `low_temporal_resolution_0_5h`: 标志位, dt<0.5h或仅1个perimeter时为1
 
 ### growth (10个) -- 火灾增长
@@ -93,7 +95,12 @@
 
 ## 5. 数据特点观察
 
-- **大量零值**: 很多样本只有1个perimeter观测(low_temporal_resolution=1), 导致增长/运动相关特征全为0
+- **5km 距离阈值完美分离** (主办方确认非 data leakage):
+  - 训练集: 所有 69 个 `dist_min_ci_0_5h < 5km` 的火灾 event=1 (100% hit), 所有 152 个 >= 5km 的火灾 event=0 (0% hit), 无一例外
+  - 测试集分布类似: ~28 个 < 5km (29.5%) vs 训练集 69 个 (31.2%)
+  - 原因: "hit" 的物理定义本身基于距离(到疏散区 5km 范围), 距离特征在前5小时计算, 事件标签在后续预测窗口定义, 时间上严格分离
+  - 建模含义: 二分类几乎 trivial, 真正的竞赛难点在于多 horizon 概率校准和组内紧急程度排序
+- **大量零值**: 很多样本只有1个perimeter观测(low_temporal_resolution=1), 导致增长/运动相关特征全为0 (closing_speed: 91.86% 零值, dist_change: 91.86% 零值)
 - **删失数据**: event=0 表示72h内火灾未到达疏散区, 这是典型的右删失(right-censored)数据。删失样本的time_to_hit_hours是最后观测时间, 不一定等于72
 - **Informative Censoring(信息性删失)**:
   - 删失不是纯随机的, 而是操作驱动的(覆盖范围、观测可用性等)
@@ -132,12 +139,12 @@ WBrier = 0.3 * Brier@24h + 0.4 * Brier@48h + 0.3 * Brier@72h
 
 每个 horizon H 的 Brier Score 按以下规则确定 eligible 样本:
 
-| 条件 | 标签 | 是否纳入计算 |
-|------|------|-------------|
-| event=1 且 time_to_hit_hours <= H | label=1 | 纳入 |
-| event=1 且 time_to_hit_hours > H | label=0 | 纳入 |
-| event=0 且 last_observed_time >= H | label=0 | 纳入 |
-| event=0 且 last_observed_time < H | 信息不足 | 排除 |
+| 条件                               | 标签     | 是否纳入计算 |
+| ---------------------------------- | -------- | ------------ |
+| event=1 且 time_to_hit_hours <= H  | label=1  | 纳入         |
+| event=1 且 time_to_hit_hours > H   | label=0  | 纳入         |
+| event=0 且 last_observed_time >= H | label=0  | 纳入         |
+| event=0 且 last_observed_time < H  | 信息不足 | 排除         |
 
 Brier Score = mean((prob_H - label)^2)
 
@@ -152,12 +159,12 @@ Brier Score = mean((prob_H - label)^2)
 
 提交前对预测值做后处理, 可显著提升分数:
 
-| Horizon | 处理方式 | 原因 |
-|---------|---------|------|
-| 12h | 独立 clip [0.01, 0.99] | 仅影响 CI, 不参与 Brier |
-| 24h | 单调链 + clip [0.01, 0.99] | 确保 24h <= 48h |
-| 48h | 单调链 + clip [0.01, 0.99] | 确保 48h <= 72h |
-| 72h | 硬编码 1.0 | eligible 样本几乎全为正例, Brier@72h=0 |
+| Horizon | 处理方式                   | 原因                                   |
+| ------- | -------------------------- | -------------------------------------- |
+| 12h     | 独立 clip [0.01, 0.99]     | 仅影响 CI, 不参与 Brier                |
+| 24h     | 单调链 + clip [0.01, 0.99] | 确保 24h <= 48h                        |
+| 48h     | 单调链 + clip [0.01, 0.99] | 确保 48h <= 72h                        |
+| 72h     | 硬编码 1.0                 | eligible 样本几乎全为正例, Brier@72h=0 |
 
 - 72h 硬编码 1.0 直接拿满 WBrier 中 30% 权重的分数
 - 12h 与 24/48/72h 的单调链独立, 因为 12h 不参与 Brier 计算

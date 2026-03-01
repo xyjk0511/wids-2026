@@ -48,7 +48,6 @@
 | 42 | 2026-02-22 | Exp31 IPCW stacking (RSF+EST+GBSA, Ridge meta) | 0.9611 | 0.9351 | 0.0278 | 不提交 | Gate fail: OOF hybrid=0.96108 < 0.9697门槛. GBSA meta-features未给RSF+EST基线增加信号. cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005). **IPCW stacking方向关闭** |
 | 43 | 2026-02-22 | Exp32 Platt/B/48h calibration (RSF+EST blend) | 0.9539 | 0.9320 | 0.0368 | 0.96338 | OOF +0.0059 hybrid但LB -0.00445. 校准在N=221上过拟合, RSF+EST test分布与anchor差异导致迁移失败. **独立校准方向关闭** |
 | 44 | 2026-02-22 | Exp33 Split-conformal quantile recal (RSF+EST blend) | 0.9551 | 0.9320 | 0.0329 | 不提交 | OOF +0.0071 hybrid但rho=1.0(排序不变), 阶梯校准图(6/10 bin true=0). 与Exp32同模式: OOF涨+CI不变+rho≈1=LB高风险. 止损不提交. **非参数校准方向关闭** |
-| 45 | 2026-02-28 | Exp34 GBSA 50-model ensemble (0.97092 feature set, full mode) | 0.97216 | 0.94129 | 0.01461 | 0.97089 | **Phase-5 突破**: 精确复现0.97092特征工程(58特征: 37原始+24距离导向+删除3 ID列). 5 configs × 10 seeds × 5-fold StratifiedKFold = 250 GBSA模型. CV策略: 每个seed独立5-fold(0.97092精确复现), dropout=0.0. **LB 0.97089 新PB** (+0.00306 vs 旧PB 0.96783). OOF-LB gap=0.00127(健康). 特征工程关键: log_dist, inv_dist, eta_hours, threat_score_1/2/3, dist_alignment等距离交互特征. |
 | 45 | 2026-02-22 | Exp30 Multi-anchor blend w=0.8 (0.96624×0.8 + PLE_avg×0.2) | - | - | - | 0.96540 | Phase4 Track2: 复现ple-stacker基础模型(GBSA400+RSF500+XGB IPCW avg), p48 rho=0.968 vs anchor. w=0.8保守blend. LB -0.00084 vs anchor. **blend分支关闭: 自训练模型是噪声** |
 
 
@@ -248,31 +247,40 @@ lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
 - w=0.5: p48 rho_vs_ref=0.9886, 暂不提交(风险过高)
 
 **提交记录**:
-- w=0.8: LB=TBD (待提交)
+- w=0.8: LB=0.96540 (2026-02-22)
 
-## Exp34: GBSA 50-Model Ensemble (2026-02-28)
+## Exp34: Phase 4 Track 1 — Kaggle API Fork (2026-02-23)
 
-**Phase 5 实验结果**
+**动机**: 通过 Kaggle API fork suman2208/ple-stacker，加 OOF 导出 cell，获取真实 notebook 产物
+**方法**: kaggle kernels pull → 插入 OOF cell → push → 等待运行 → output 下载
 
-| 模式 | 模型数 | OOF Hybrid | OOF CI | OOF WBrier | Kaggle LB | 备注 |
-|------|-------|------------|--------|------------|-----------|------|
-| Quick | 10 | 0.97232 | 0.94137 | 0.01442 | - | Gate PASS (≥0.965) |
-| Full | 50 | 0.97257 | 0.94237 | 0.01448 | 0.96600 | Gate PASS (≥0.970) |
+**结果**:
+- fork: buchananliang/ple-stacker-oof-fork (version 2, GPU T4)
+- submission.csv: 95行，prob_48h std=0.414（分布健康）
+- oof_preds.csv: 221行，12列（gb/rsf/xgb × 4时间点）
+- rho48 vs 0.96624 = 0.830（差异显著）
+- **LB = 0.96086**（Gate 1 失败，< 0.96624）
 
-**配置**: 
-- 5 configs × 10 seeds = 50 models
-- dropout_rate=0.0 (复现0.97092核心参数)
-- Feature level: medium (36 features)
+**分析**:
+- 原始 notebook LB=0.96654，fork 只得 0.96086，差距 0.006
+- PLE stacker 神经网络训练不确定性 + GPU 随机性导致复现失败
+- rhythmghai/ridge-stacker 私有（403），无第二个可访问高分 notebook
+- **Track 1 止损，切 Track 3（RSF 超参网格）**
 
-**关键发现**:
-1. **OOF vs LB 严重脱钩**: OOF 0.97257 (超过PB的0.96783达+0.00474)，但LB 0.96600 (-0.00183 vs PB)
-2. **OOF-LB gap 扩大**: 从典型的0.010扩大到0.016 (+60%)
-3. **GBSA泛化问题**: GBSA在train/OOF上表现优异，但在hidden test上泛化弱于RSF
-4. **50模型集成边际收益递减**: Quick(10模型) → Full(50模型) 仅+0.00025 OOF，LB未验证
+## Exp35: Phase 4 Track 3 — RSF 超参网格 (2026-02-23)
 
-**结论**:
-- GBSA 50-model ensemble 不是突破口
-- OOF高估严重，模型复杂度增加未带来LB提升
-- 需重新评估GBSA方向，可能回归RSF为主的策略
+**动机**: 在复现 pipeline 基础上搜索更优 RSF 超参，目标 LB > 0.96624
+**网格**: n_estimators×max_features×min_samples_leaf，5次预算（4配置+1版本验证）
 
-**文件**: `submissions/submission_exp34_full.csv`
+**结果**:
+
+| 配置 | rho_p48 | LB | 备注 |
+|------|---------|-----|------|
+| n=500/sqrt/msl=3 | 0.971 | **0.91089** | 分布压缩 |
+| n=500/0.5/msl=3 | 0.970 | **0.90860** | 分布压缩 |
+
+**根因分析**:
+- R1 prob_48h std=0.102 vs 参考 std=0.364 — 预测值全压缩在 0.17–0.49
+- rho_p48=0.97（排序相似）但 Brier score 崩溃（值域丧失区分度）
+- 网格脚本特征工程/后处理与参考 pipeline 不一致
+- **Phase 4 Track 3 失败，当前最优仍为 0.96624/0.96681**

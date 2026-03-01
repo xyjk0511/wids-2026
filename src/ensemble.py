@@ -161,9 +161,9 @@ def stacking_meta_learner(oof_preds_list, y_time, y_event, model_names):
     Returns:
         Fitted LogisticRegression model, eligible mask used for training.
     """
-    from src.models import _build_horizon_labels
+    from src.labels import build_horizon_labels
 
-    labels, eligible = _build_horizon_labels(y_time, y_event, 12)
+    labels, eligible = build_horizon_labels(y_time, y_event, 12)
 
     # Stack 12h OOF predictions from all models as features
     X_meta = np.column_stack([
