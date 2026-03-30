@@ -15,6 +15,8 @@
 | Core methods | Gradient boosting ensembles, calibration, risk scaling |
 | Project value | Competition ML, validation design, iterative experimentation |
 
+![WiDS summary card](assets/summary-card.svg)
+
 This repository contains my competition workflow for **WiDS Datathon 2026**, focused on clinical risk prediction with gradient boosting ensembles, calibration, and leaderboard-oriented validation.
 
 本仓库记录了我在 **WiDS Datathon 2026** 中的主要建模与实验流程，重点是临床预测任务中的集成学习、校准、特征工程和离线验证策略。
