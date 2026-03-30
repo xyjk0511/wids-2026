@@ -48,6 +48,9 @@
 | 42 | 2026-02-22 | Exp31 IPCW stacking (RSF+EST+GBSA, Ridge meta) | 0.9611 | 0.9351 | 0.0278 | 不提交 | Gate fail: OOF hybrid=0.96108 < 0.9697门槛. GBSA meta-features未给RSF+EST基线增加信号. cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005). **IPCW stacking方向关闭** |
 | 43 | 2026-02-22 | Exp32 Platt/B/48h calibration (RSF+EST blend) | 0.9539 | 0.9320 | 0.0368 | 0.96338 | OOF +0.0059 hybrid但LB -0.00445. 校准在N=221上过拟合, RSF+EST test分布与anchor差异导致迁移失败. **独立校准方向关闭** |
 | 44 | 2026-02-22 | Exp33 Split-conformal quantile recal (RSF+EST blend) | 0.9551 | 0.9320 | 0.0329 | 不提交 | OOF +0.0071 hybrid但rho=1.0(排序不变), 阶梯校准图(6/10 bin true=0). 与Exp32同模式: OOF涨+CI不变+rho≈1=LB高风险. 止损不提交. **非参数校准方向关闭** |
+| 45 | 2026-03-01 | Phase 5: GBSA 50-model ensemble baseline | 0.9736 | 0.9440 | 0.0138 | 0.97089 | **Phase 5 baseline**. GBSA 50模型集成, 无后处理. 当前最高LB分数. |
+| 46 | 2026-03-02 | Phase 7: 5km cutoff + PowerCal24 (4 variants) | 0.9736 | 0.9440 | 0.0138 | 0.96202 | **失败** (-0.00887 vs Phase 5). 5km距离硬截断+PowerCal24校准(power=0.5/0.6/0.7/0.8). 4个变体LB完全相同(0.96202). 67/95样本被floor, 仅28样本可校准导致多样性不足. 训练集dist≥5km的0%事件率未泛化到测试集. **硬截断+测试时后处理方向关闭** |
+| 47 | 2026-03-02 | Phase 7 Rollback: 恢复 Phase 5 baseline | 0.9736 | 0.9440 | 0.0138 | TBD | 禁用5km cutoff和PowerCal24, 恢复Phase 5配置. OOF完全匹配Phase 5 (0.9736). 提交文件: submission_exp34_rollback.csv. Floor样本: 0/95 (vs Phase 7的67/95). 待Kaggle验证LB恢复到~0.97089. |
 | 45 | 2026-02-22 | Exp30 Multi-anchor blend w=0.8 (0.96624×0.8 + PLE_avg×0.2) | - | - | - | 0.96540 | Phase4 Track2: 复现ple-stacker基础模型(GBSA400+RSF500+XGB IPCW avg), p48 rho=0.968 vs anchor. w=0.8保守blend. LB -0.00084 vs anchor. **blend分支关闭: 自训练模型是噪声** |
 
 

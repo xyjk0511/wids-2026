@@ -1,5 +1,30 @@
 .venv/
+.venv_*/
+venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 nul
+kaggle.json
+
+# AI工具目录
+.claude/
+.codex/
+openspec/
+.planning/
+
+# IDE
+.vscode/
+
+# 临时文件
+gemini.md
+src/CLAUDE.md
+notebooks/CLAUDE.md
+
+# 大数据文件
+data/
+catboost_info/
+logs/
+submissions/
+*.csv
+*.parquet

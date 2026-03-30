@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"\\(Get-Content D:\\\\wids\\\\train.csv | Measure-Object -Line\\).Lines\")",
+      "Bash(powershell -Command \"\\(Get-Content D:\\\\wids\\\\test.csv | Measure-Object -Line\\).Lines\")",
+      "Bash(powershell -Command \"\\(Get-Content D:\\\\wids\\\\sample_submission.csv | Measure-Object -Line\\).Lines\")",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"\\(Get-Content D:\\\\wids\\\\metaData.csv | Measure-Object -Line\\).Lines\")",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(jupyter nbconvert:*)",
+      "Bash(del D:widseda_test.ipynb)",
+      "Bash(D:/wids/.venv/Scripts/pip.exe install:*)",
+      "Bash(D:wids.venvScriptspip.exe install scikit-survival xgboost lifelines)",
+      "Bash(\"D:/wids/.venv/Scripts/pip.exe\" show:*)",
+      "Bash(\"D:/wids/.venv/Scripts/python.exe\" -m src.train:*)",
+      "Bash(D:/wids/.venv/Scripts/python.exe -m src.train:*)",
+      "Bash(python:*)",
+      "WebSearch",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: ensemble regularization + per-horizon weights + Platt calibration\n\nStep 1: L2 regularization on ensemble weights + bootstrap robust optimization\nStep 2: RankXGB multi-horizon independent training \\(remove heuristic scaling\\)\nStep 3: Per-horizon weight optimization \\(24h/48h minimize Brier+L2\\)\nStep 4: Platt Scaling calibration on 24h/48h \\(C=0.1\\)\nStep 1c: Stacking meta-learner C=1.0 -> C=0.1\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git status:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: monotonicity enforcement + disable Platt Scaling + add CLAUDE.md\n\n- Fix submission_postprocess to enforce 12h <= 24h monotonicity\n- Disable Platt Scaling \\(worsens Brier from 0.03 to 0.10\\)\n- Add CLAUDE.md with experiment management rules\n- Update experiments.md with v2 results\n\nCV Hybrid: 0.9692 \\(down from 0.9721\\), needs investigation.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "Bash(del /Q D:widsscriptscompare_features.py D:widsscriptsfeature_importance.py D:widsscriptscompare_v96624plus_vs_medium.py)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: switch to MEDIUM feature set \\(36 features\\) for +0.0031 OOF improvement\n\nFeature set comparison: v96624\\(16\\)=0.9690, medium\\(36\\)=0.9721, full\\(44\\)=0.9719.\nAdded FEATURES_V96624_PLUS \\(21 features\\) as alternative. Experiment #6 pending LB.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(del \"D:\\\\wids\\\\scripts\\\\screenshot_overview.py\")",
+      "Bash(xcopy:*)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "outputStyle": "Explanatory"
+}
