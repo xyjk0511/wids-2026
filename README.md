@@ -1,5 +1,20 @@
 # WiDS 2026 Clinical Prediction Pipeline / WiDS 2026 临床预测项目
 
+![Python](https://img.shields.io/badge/Python-ML%20Pipeline-blue)
+![Competition](https://img.shields.io/badge/Kaggle-WiDS%202026-20BEFF)
+![Leaderboard](https://img.shields.io/badge/LB-0.97089-success)
+![Focus](https://img.shields.io/badge/Focus-Calibration%20%2B%20Ensemble-orange)
+
+## At a glance / 项目速览
+
+| Item | Summary |
+|------|---------|
+| Task | Clinical risk prediction / 临床风险预测 |
+| Setting | WiDS Datathon 2026 competition workflow |
+| Best public score | **0.97089** |
+| Core methods | Gradient boosting ensembles, calibration, risk scaling |
+| Project value | Competition ML, validation design, iterative experimentation |
+
 This repository contains my competition workflow for **WiDS Datathon 2026**, focused on clinical risk prediction with gradient boosting ensembles, calibration, and leaderboard-oriented validation.
 
 本仓库记录了我在 **WiDS Datathon 2026** 中的主要建模与实验流程，重点是临床预测任务中的集成学习、校准、特征工程和离线验证策略。
