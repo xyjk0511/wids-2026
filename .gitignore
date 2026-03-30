@@ -28,3 +28,5 @@ logs/
 submissions/
 *.csv
 *.parquet
+.venv_sksurv21/
+.venv_sksurv22/
