@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "branch_name": "master",
+      "worktree_path": "D:\\wids",
+      "status": "active",
+      "created_at": "2026-04-29T00:54:20.879Z",
+      "updated_at": "2026-04-29T00:54:20.879Z"
+    }
+  ]
+}

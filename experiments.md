@@ -1,0 +1,289 @@
+﻿# WiDS 2025 - 瀹為獙璁板綍
+
+## 鎻愪氦鍘嗗彶
+
+| # | 鏃ユ湡 | 妯″瀷 | Local CV Hybrid | Local CV CI | Local CV WBrier | Kaggle LB | 澶囨敞 |
+|---|------|------|-----------------|-------------|-----------------|-----------|------|
+| 1 | 2026-02-08 | ensemble(rankxgb+rsf+gbsa) | 0.9721 | 0.9420 | 0.0150 | 0.95054 | CV-LB gap 鍚堢悊, LB 鐣ラ珮浜?CV CI, 娉涘寲鑹ソ |
+| 2 | 2026-02-08 | ensemble v2 (L2姝ｅ垯+bootstrap+per-horizon+RankXGB鐙珛璁粌) | 0.9692 | 0.9420 | 0.0191 | 0.95739 | L2姝ｅ垯lambda=0.1, bootstrap n=30, per-horizon Brier浼樺寲, stacking C=0.1, Platt Scaling绂佺敤. CV-LB gap=0.012(缂╁皬) |
+| 3 | 2026-02-09 | RSF鍗曟ā鍨?(v96624鐗瑰緛闆?6涓?StandardScaler+clip鍚庡鐞? | 0.9697 | 0.9397 | 0.0174 | 0.95873 | 瀵归綈0.96624婧愮爜: 15base+3eng鐗瑰緛, 璺宠繃remove_redundant, 鎶樺唴StandardScaler, clip[0.01,0.99]. 姒傜巼鍒嗗竷浠嶅亸浣?12h median=0.016 vs鐩爣0.15). CV-LB gap=0.012 |
+| 4 | 2026-02-10 | RSF+2class鍒嗗眰+KFold骞冲潎+logit鍒嗕綅鏁版牎鍑?| 0.9622 | 0.9378 | 0.0273 | 0.94688 | 3椤规敼鍔? (1)CV鍒嗗眰4class->2class, (2)50鎶樻ā鍨媡est骞冲潎鏇夸唬full retrain, (3)logit绌洪棿p5/p95鍒嗕綅鏁板尮閰嶆牎鍑? 鏍″噯涓ラ噸浼ゅLB(-0.012). OOF宸茶鍛?0.9689->0.9622). 12h median浠?.015鎻愬崌鍒?.067浣嗚繃搴︽牎鍑? 闇€鍥為€€鏍″噯 |
+| 5 | 2026-02-10 | RSF鍗曟ā鍨?(n_estimators=1000, max_features=sqrt) | 0.9690 | 0.9387 | 0.0180 | 0.95952 | 杩樺師瀹為獙#3缁撴瀯(full retrain), n_estimators 200->1000. 瓒呭弬鎼滅储鍙戠幇max_features=None OOF鏈€浼?0.9716)浣唂ull retrain杩囨嫙鍚? 纭0.96624宸窛鏉ヨ嚜搴撶増鏈?sksurv)闈炰唬鐮佸樊寮? CV-LB gap=0.010 |
+| 6 | 2026-02-11 | RSF鍗曟ā鍨?MEDIUM鐗瑰緛闆?36涓? | 0.9721 | 0.9410 | 0.0145 | 0.96174 | 鐗瑰緛闆嗗姣? v96624(16)=0.9690, medium(36)=0.9721, full(44)=0.9719. MEDIUM鑳滃嚭+0.0031. LB浠?.95952鎻愬崌鍒?.96174(+0.00222). CV-LB gap=0.010 |
+| 7 | 2026-02-11 | RSF瓒呭弬璋冧紭 max_features=12 (MEDIUM 36鐗瑰緛) | 0.9724 | 0.9414 | 0.0142 | 0.96136 | 2杞綉鏍兼悳绱?12缁?. max_features=12(鍘焥qrt=6). OOF +0.0003浣哃B -0.00038. max_features澧炲ぇ瀵艰嚧full retrain杩囨嫙鍚? CV-LB gap浠?.010鎵╁ぇ鍒?.011. 闇€鍥為€€鍒皊qrt. |
+| 8 | 2026-02-11 | RSF澶歴eed骞冲潎 (5seeds x 200trees, MEDIUM 36鐗瑰緛) | 0.9721 | 0.9410 | 0.0145 | 0.96209 | 瀵归綈鍘熷0.96624閰嶇疆: n_estimators=200, 5涓猻eed(42,123,456,789,2026)骞冲潎. CV涓嶅彉(浠峮=1000鍗晄eed). LB +0.00035(0.96174->0.96209). CV-LB gap=0.010. 鏂瑰樊缂╁噺鏈夋晥, 鏂瑰悜姝ｇ‘. 璺濈洰鏍?.96624杩樺樊0.00415. |
+| 9 | 2026-02-11 | RSF+EST娣峰悎 (5seeds x RSF+EST=10妯″瀷, MEDIUM 36鐗瑰緛) | 0.9721 | 0.9410 | 0.0145 | 0.96331 | 鏂板ExtraSurvivalTrees(闅忔満鍒嗚). 5 RSF + 5 EST = 10妯″瀷骞冲潎. LB +0.00122(0.96209->0.96331). EST寮曞叆鐪熸妯″瀷澶氭牱鎬? 24h median浠?.01灞曞紑鍒?.016. CV-LB gap=0.009(缂╁皬). 璺濈洰鏍?.96624杩樺樊0.00293. |
+| 10 | 2026-02-11 | GBSA(12h)+RSF(24h/48h) per-horizon鎷嗗垎 (5seeds each) | 0.9721 | 0.9410 | 0.0145 | 0.94910 | 澶辫触(-0.01421). GBSA 12h姒傜巼鍘嬬缉(range=0.056, 95鏍锋湰鎸ゅ湪0.212-0.268), CI瀵筺ear-tie鏁忔劅瀵艰嚧宕╂簝. Spearman vs鍙傝€?0.95浣嗕笉绛変簬CI vs鐪熷疄鏍囩. 鍘绘帀EST闄嶄綆妯″瀷澶氭牱鎬т激瀹砏Brier. 宸插洖閫€鍒板疄楠?9閰嶇疆. |
+| 11 | 2026-02-12 | RSF+EST max_features=None (5seeds x 2妯″瀷, MEDIUM 36鐗瑰緛) | 0.9715 | 0.9388 | 0.0145 | 0.96324 | max_features浠巗qrt鏀筃one鍖归厤0.96624鍘熷閰嶇疆. Spearman澶у箙鎻愬崌(0.72->0.82)浣哋OF CI涓嬮檷(0.9410->0.9388). LB -0.00007(0.96331->0.96324). 鎺掑簭瀵归綈鍙傝€冧絾鍒ゅ埆鍔涚暐闄? 宸插洖閫€鍒皊qrt. |
+| 12 | 2026-02-12 | RSF+EST+GBSA selective blend (12h:RSF+EST, 24h/48h:+GBSA, 5seeds) | 0.9721 | 0.9410 | 0.0145 | TBD | GBSA浠呭弬涓?4h/48h WBrier浼樺寲, 12h CI淇濇寔RSF+EST. CV浠嶄负RSF-only(鐩查). 浠ｇ爜蹇収: experiments/exp12_gbsa_blend/ |
+| 13 | 2026-02-12 | Exp14 v3 CV ensemble (50-fold RSF+EST骞冲潎, R1鍗曡皟淇) | 0.9707 | 0.9438 | 0.0177 | 0.96329 | CV ensemble鏇夸唬full retrain, 50fold妯″瀷骞冲潎test棰勬祴. R1淇: p12=min(p12,p24)闃蹭紶瀵? 12h Spearman=0.80. LB涓?9鎸佸钩(-0.00002). 鏍″噯鏂瑰悜宸茬┓灏?v1/v2/v3鍏?绛栫暐鍏ㄩ儴澶辫触鎴栨寔骞?. 浠ｇ爜: experiments/exp14_calibrated_ensemble/ |
+| 14 | 2026-02-13 | 0.96624閿氱偣鏇挎崲12h锛坰ub_96624_riskp12锛?| 0.9738* | 0.9448* | 0.0138* | 0.96184 | 浠呮浛鎹?`prob_12h`锛宍prob_24h/48h/72h` 涓?`submission 0.96624.csv` 瀹屽叏涓€鑷达紱骞跺己鍒?`p12<=p24-1e-6`銆侺B 浣庝簬閿氱偣锛岃鏄庡綋鍓?risk->p12 鏄犲皠鍒嗗竷涓庣嚎涓婁笉鍖归厤銆俙*` 涓烘湰鍦癘OF瀹為獙鎸囨爣锛岄潪璇ユ彁浜ょ洿鎺V銆?|
+| 15 | 2026-02-13 | Exp17 鍩虹嚎: RSF(200) 16鐗瑰緛 鍏ㄥ眬scaler 鍙傝€冨悗澶勭悊 | 0.9708 | 0.9449 | 0.0181 | TBD | 绮剧‘澶嶇幇鍙傝€僷ipeline(鍘绘帀EST鍜?6鐗瑰緛鑶ㄨ儉). 娑堣瀺鍙戠幇: 鐗瑰緛鑶ㄨ儉15->36瀵艰嚧CV -0.0057, EST娣峰悎瀵艰嚧CV -0.0140, 鍚堣-0.0197瑙ｉ噴浜?.96624->0.96331鐨凩B宸窛. 鍏朵粬4椤?鏍戞暟/scaler/鍚庡鐞?CV ensemble)鍑犱箮鏃犲奖鍝? 寰呮彁浜ら獙璇? |
+| 16 | 2026-02-14 | Exp22 R1 lam=0.10 涓婃帹 (a=1.057,b=+0.008) | - | - | - | 0.96629 | 閿氱偣p48 logit绌洪棿杩戞亽绛夋牎鍑? OOF bootstrap(a,b)涓婃帹鐗? 浠呭姩p48,p12/p24閿佹. +0.00005 vs anchor |
+| 17 | 2026-02-14 | Exp22 R2A lam=0.20 涓嬫帹 (a=1.066,b=-0.011) | - | - | - | 0.96634 | 閿氱偣钂搁瀛︾敓A(isotonic on -log_dist)瀛﹀埌鐨?a,b)涓嬫帹鐗? 涓嬫帹>涓婃帹, 纭hidden p48鍋忛珮 |
+| 18 | 2026-02-14 | Exp22c lam=0.80 (a=1.0655,b=-0.0108) | - | - | - | 0.96661 | 娌夸笅鎺ㄦ柟鍚戝姞澶ambda. 0 violations. 瓒嬪娍绾挎€?0.00009/step |
+| 19 | 2026-02-14 | Exp22c lam=1.00 | - | - | - | 0.96668 | 4 violations寮€濮嬪嚭鐜? 姝ヨ繘琛板噺鍒?0.00007 |
+| 20 | 2026-02-14 | Exp22c lam=1.05 | - | - | - | 0.96670 | 鎮礀鍓嶆渶鍚庡畨鍏ㄧ偣(7 violations). 鏃х瓥鐣?p48 clip up)鐨勬瀬闄?|
+| 21 | 2026-02-15 | Exp22d lam=1.05 p24-yields | - | - | - | 0.96671 | 鏂颁慨澶嶇瓥鐣? violations鏃秔24璁╄矾鑰岄潪p48涓婃姮. 楠岃瘉绛栫暐鏈夋晥(+0.00001) |
+| 22 | 2026-02-15 | Exp22d lam=1.10 p24-yields | - | - | - | 0.96674 | 绌胯繃鏃ф偓宕?鏃х瓥鐣ユ澶剅ho48宕╁埌0.9987). 46 violations鐢眕24鍚告敹 |
+| 23 | 2026-02-15 | Exp22d lam=1.20 p24-yields | - | - | - | 0.96679 | 66 violations, rho48=0.999997淇濇寔. p24-yields绛栫暐鐨勫崟鎺ㄦ瀬闄?|
+| 24 | 2026-02-15 | Exp22d r=0.3 lam=1.20 鑱斿姩 | - | - | - | 0.96681 | 24+48鑱斿姩涓嬫帹: p24涓诲姩璺熼殢p48涓嬫帹(r=0.3). 0 violations. 鑱斿姩>琚姩璁╄矾 |
+| 25 | 2026-02-15 | Exp22d r=0.3 lam=1.50 鑱斿姩 | - | - | - | 0.96693 | 鑱斿姩娑堥櫎鎮礀鍚庣户缁帹. 4 violations. lam杩樻病鍒伴《 |
+| 26 | 2026-02-15 | Exp22d r=0.5 lam=2.00 鑱斿姩 | - | - | - | 0.96713 | 4 violations. 澧為噺鍔犻€?+0.00020). 瓒嬪娍鏈鎷愮偣 |
+| 27 | 2026-02-19 | Exp22f lam=5.0 gap-gated rh=1.0 rl=0.7 | - | - | - | 0.96776 | gap-gated r: 灏廹ap鏍锋湰r=rh=1.0, 澶ap鏍锋湰r=rl=0.7. gate=[0.005,0.025]. +0.00063 vs #26 |
+| 28 | 2026-02-19 | Exp22f lam=6.0 gap-gated rh=1.0 rl=0.7 | - | - | - | 0.96780 | 褰撳墠PB. 宄板€奸檮杩? +0.00067 vs #26 |
+| 29 | 2026-02-19 | Exp22f lam=7.0 gap-gated rh=1.0 rl=0.7 | - | - | - | 0.96779 | 寰檷-0.00001, 纭lam=6.0涓哄嘲鍊煎尯鍩?|
+| 30 | 2026-02-20 | P1 Decoupled: WeightSearch(12h)+LGBM(24h/48h) 瑁稿垎 | 0.9751 | 0.9445 | 0.0119 | 0.96250 | 4妯″瀷瑙ｈ€︾瓥鐣? CV+0.0044浣哃B-0.00530. LGBM鍦?21鏍锋湰涓婅繃鎷熷悎鏍″噯, 12h med=0.006(鐩爣0.15). CV-LB gap浠?.01鎵╁ぇ鍒?.05. 澶辫触 |
+| 31 | 2026-02-20 | P1 Hybrid: decoupled 12h + anchor Exp22f 24h/48h | - | - | - | 0.96486 | decoupled 12h鎺掑簭+閿氱偣鏍″噯24h/48h(lam=6.0). 姣旇８鍒?0.00236, 浣嗕粛浣庝簬PB-0.00294. 閿氱偣24h/48h鏇村彲闈?|
+| 32 | 2026-02-20 | Exp23 uniform_r10 (lam=6.0, r=1.0 鍏ㄨ€﹀悎) | - | - | - | 0.96758 | 绾€﹀悎p24瀹屽叏璺熼殢p48. 姣擯B浣?.00022, 璇佹槑gate鐨?鏍锋湰鍖哄垎璐＄尞浜?0.00022 |
+| 33 | 2026-02-20 | Exp23 rh=1.1 rl=0.7 gate=[0.012,0.018] | - | - | - | 0.96783 | **新PB** rh=1.1小gap样本更激进推+gate收窄. +0.00003 vs 旧PB(0.96780) |
+| 34 | 2026-02-20 | Exp23 rh=1.0 rl=0.7 gate=[0.013,0.016] | - | - | - | 0.96782 | gate极窄卡在gap中位数0.013. +0.00002 vs 旧PB |
+| 35 | 2026-02-21 | Exp25 p12rank capped s24a01 w55 | - | - | - | 0.96636 | RankXGB重排p12(capped p12<=p24), 锁定PB 24h/48h/72h. -0.00147 vs PB. rank重排严重伤分 |
+| 36 | 2026-02-21 | Exp25 p12rank uncap s96624 w55 | - | - | - | 0.96783 | uncap版(29个p12>p24违例), 锚定96624. 追平PB! 说明p12>p24违例不扣分, 96624锚定优于s24a01 |
+| 37 | 2026-02-21 | Exp25 p12rank uncap s24a03 w55 | - | - | - | 0.96636 | uncap版(27个p12>p24违例), 锚定Exp23 a=0.3. 与capped版同分, a03锚定不如96624 |
+| 38 | 2026-02-21 | Exp25 p12rank uncap s96624 w65 | - | - | - | 0.96783 | uncap版, 锚定96624, w65. 再次追平PB. 确认p12重排完全中性, LB仅由24h/48h锚定决定 |
+| 39 | 2026-02-22 | Exp27 RSF+XGB best_blend (RSF=0.6 XGB=0.4) | 0.9701 | 0.9407 | 0.0172 | TBD | 3模型多样性测试: RSF=0.9691, XGB=0.9682, Cox=0.9346(废弃). 最优混合排除Cox. Spearman: blend rho12=0.91 rho24=0.94 rho48=0.93. 待提交验证 |
+| 40 | 2026-02-22 | Exp28 anchor+model blend+PB cal | - | - | - | TBD | 将exp27 blend以alpha=0.05~0.20混入0.96624锚点再校准. rho48随alpha单调下降(0.964→0.962). 模型混合方向关闭——自训练模型是噪声非信号 |
+| 41 | 2026-02-22 | Exp30 DeepSurv (pycox.CoxPH) | 0.9364 | 0.9072 | 0.0510 | 不提交 | DL生存模型测试. v96624 16特征, 2层[64,64], dropout=0.3, 5fold×10repeat. CI比RSF低0.033, WBrier高3x. 止损门槛未达(需+0.003, 实际-0.034). LogisticHazard完全崩溃(概率坍缩~0.98). **DL方向关闭** |
+| 42 | 2026-02-22 | Exp31 IPCW stacking (RSF+EST+GBSA, Ridge meta) | 0.9611 | 0.9351 | 0.0278 | 不提交 | Gate fail: OOF hybrid=0.96108 < 0.9697门槛. GBSA meta-features未给RSF+EST基线增加信号. cross-fit后OOF从0.96610降到0.96108(leak膨胀+0.005). **IPCW stacking方向关闭** |
+| 43 | 2026-02-22 | Exp32 Platt/B/48h calibration (RSF+EST blend) | 0.9539 | 0.9320 | 0.0368 | 0.96338 | OOF +0.0059 hybrid但LB -0.00445. 校准在N=221上过拟合, RSF+EST test分布与anchor差异导致迁移失败. **独立校准方向关闭** |
+| 44 | 2026-02-22 | Exp33 Split-conformal quantile recal (RSF+EST blend) | 0.9551 | 0.9320 | 0.0329 | 不提交 | OOF +0.0071 hybrid但rho=1.0(排序不变), 阶梯校准图(6/10 bin true=0). 与Exp32同模式: OOF涨+CI不变+rho≈1=LB高风险. 止损不提交. **非参数校准方向关闭** |
+| 45 | 2026-03-01 | Phase 5: GBSA 50-model ensemble baseline | 0.9736 | 0.9440 | 0.0138 | 0.97089 | **Phase 5 baseline**. GBSA 50模型集成, 无后处理. 当前最高LB分数. |
+| 46 | 2026-03-02 | Phase 7: 5km cutoff + PowerCal24 (4 variants) | 0.9736 | 0.9440 | 0.0138 | 0.96202 | **失败** (-0.00887 vs Phase 5). 5km距离硬截断+PowerCal24校准(power=0.5/0.6/0.7/0.8). 4个变体LB完全相同(0.96202). 67/95样本被floor, 仅28样本可校准导致多样性不足. 训练集dist≥5km的0%事件率未泛化到测试集. **硬截断+测试时后处理方向关闭** |
+| 47 | 2026-03-02 | Phase 7 Rollback: 恢复 Phase 5 baseline | 0.9736 | 0.9440 | 0.0138 | TBD | 禁用5km cutoff和PowerCal24, 恢复Phase 5配置. OOF完全匹配Phase 5 (0.9736). 提交文件: submission_exp34_rollback.csv. Floor样本: 0/95 (vs Phase 7的67/95). 待Kaggle验证LB恢复到~0.97089. |
+| 45 | 2026-02-22 | Exp30 Multi-anchor blend w=0.8 (0.96624×0.8 + PLE_avg×0.2) | - | - | - | 0.96540 | Phase4 Track2: 复现ple-stacker基础模型(GBSA400+RSF500+XGB IPCW avg), p48 rho=0.968 vs anchor. w=0.8保守blend. LB -0.00084 vs anchor. **blend分支关闭: 自训练模型是噪声** |
+
+
+## Exp22 绯诲垪璇︾粏鍒嗘瀽
+
+### 鏍稿績鍙戠幇
+
+1. **hidden test p48鍋忛珮**: 涓嬫帹(b<0)濮嬬粓浼樹簬涓婃帹(b>0), 纭閿氱偣p48鍦╤idden涓婄郴缁熸€у亸涔愯
+2. **鎷変几(a>1)鏄富鍔?*: 绾钩绉?a=1,b=-0.05)浠呭緱0.96628, 鑰屽悓绛塎AD鐨勬媺浼哥増寰?.96643. logit绌洪棿涓ょ鎷夊紑姣旀暣浣撲笅绉绘湁鏁堝緱澶?3. **鎮礀鏈哄埗**: p48涓嬫帹鍒版帴杩憄24鏃惰Е鍙戝崟璋冪害鏉焎lip, 瀵艰嚧鍒诲害琚簩娆℃壄鏇? 瑙ｅ喅鏂规: (1)p24琚姩璁╄矾 (2)24+48涓诲姩鑱斿姩涓嬫帹
+4. **鑱斿姩閲婃斁鏀剁泭**: r=0.3~0.5鐨勮仈鍔ㄦ秷闄iolations鍚? 鍙畨鍏ㄦ帹鍒版洿澶ambda, 鏀剁泭鍔犻€熻€岄潪琛板噺
+5. **gap-gated r绛栫暐(Exp22f)**: 鎸夋牱鏈琯ap(p48-p24)璋冭妭r鍊? 灏廹ap鏍锋湰鎺ㄦ洿鐙?rh=1.0), 澶ap鏍锋湰淇濆畧(rl=0.7). 浠?.96713璺冲埌0.96780(+0.00067), 宄板€煎湪lam鈮?.0, lam=7.0寮€濮嬪井闄?
+### 鍙樻崲鍏紡
+
+```
+logit(p48_new) = (1-lam)*logit(p48_anchor) + lam*(a*logit(p48_anchor) + b)
+logit(p24_new) = (1-lam*r)*logit(p24_anchor) + lam*r*(a*logit(p24_anchor) + b)
+```
+鍙傛暟: a=1.0655, b=-0.0108 (鏉ヨ嚜R2A钂搁瀛︾敓bootstrap median, lam_reg=0.2)
+
+### LB瓒嬪娍 (鎸夋帹鍔涢€掑)
+
+```
+lam=0.20 r=0.0  -> 0.96634  (+0.00010)
+lam=0.40 r=0.0  -> 0.96643  (+0.00019)
+lam=0.60 r=0.0  -> 0.96652  (+0.00028)
+lam=0.80 r=0.0  -> 0.96661  (+0.00037)
+lam=1.00 r=0.0  -> 0.96668  (+0.00044)  4 violations
+lam=1.05 r=0.0  -> 0.96670  (+0.00046)  7 violations, 鏃х瓥鐣ユ瀬闄?lam=1.20 p24璁╄矾 -> 0.96679  (+0.00055)  66 violations absorbed by p24
+lam=1.20 r=0.3  -> 0.96681  (+0.00057)  0 violations
+lam=1.50 r=0.3  -> 0.96693  (+0.00069)  4 violations
+lam=2.00 r=0.5  -> 0.96713  (+0.00089)  4 violations
+--- Exp22f: gap-gated r (rh=1.0, rl=0.7, gate=[0.005,0.025]) ---
+lam=5.0  gated   -> 0.96776  (+0.00152)
+lam=6.0  gated   -> 0.96780  (+0.00156)  褰撳墠PB
+lam=7.0  gated   -> 0.96779  (+0.00155)  鎷愮偣, 寮€濮嬪洖钀?```
+
+### 寰呮彁浜?(宸茬敓鎴?
+
+- lam55_rh10_rl07: 濉ˉlam=5.0~6.0涔嬮棿
+- lam45_rh11_rl07: 娴嬭瘯r_hi=1.1缁村害
+- lam=6.0闄勮繎涓哄嘲鍊? lambda杞翠紭鍖栫┖闂村熀鏈€楀敖(卤0.00004)
+
+
+## 当前状态 (2026-02-22)
+
+- **PB: 0.96783** (Exp23 rh=1.1 rl=0.7 gate=[0.012,0.018], 2026-02-20)
+- 目标: 0.975+
+- Submission 文件统一放在 `submissions/`
+
+### 关键发现
+
+- CV-LB Gap是主要瓶颈: P1 Decoupled CV=0.9751但LB=0.96250, gap=0.05
+- 221样本太小, GBM per-horizon分类头泛化不足, 模型侧大改暂停
+- Exp22 logit空间校准有效: A=1.0655, B=-0.0108, lam=6.0峰值
+- Gate贡献+0.00022 (uniform_r10=0.96758 vs PB=0.96780), 仅影响2样本
+- 锚点12h: 58/95压缩在[0.036,0.050], gap集中在0.013附近
+- **校准天花板已触及**: Exp22(logit线性)/Exp32(Platt参数)/Exp33(非参数分位数)三类校准均无法在LB上超越锚点后处理
+- **提交门槛收紧**: 仅允许"改变排序且有稳定性证据"的方案进入提交
+
+### 下一步优先级
+
+1. **更强锚点获取/复现** ← 唯一可能到0.975+的路线
+2. 12h排序增强: tie-breaking / 排序微调 (仅影响CI)
+3. ~~锚点后处理精调~~ → Exp22已到峰值(lam=6.0)
+4. ~~特征工程和新模型暂缓~~ → **模型侧全部关闭**
+4. ~~Exp23 gate参数细化~~ (已充分搜索)
+5. ~~Exp26 per-horizon A 解耦~~ (已关闭，中性)
+6. ~~Exp25 p12 rank reorder~~ (已关闭，中性)
+7. ~~Exp30 DL生存模型~~ (已关闭，CI低0.033，221样本DL无信号)
+8. ~~Exp31 IPCW stacking~~ (已关闭，gate fail OOF=0.96108<0.9697)
+9. ~~Exp32 独立校准~~ (已关闭，OOF+0.0059但LB-0.00445，N=221过拟合)
+10. ~~Exp33 非参数校准~~ (已关闭，OOF+0.0071但rho=1.0排序不变，止损不提交)
+
+## 今日补充 (2026-02-21)
+
+### Exp25 当日已提交
+
+| 文件 | Kaggle LB | 备注 |
+|---|---|---|
+| exp25_p12rank_s24a01_w55.csv | 0.96636 | capped 版本，显著退化 |
+| exp25_p12rank_uncap_s96624_w55.csv | 0.96783 | 追平 PB |
+| exp25_p12rank_uncap_s24a03_w55.csv | 0.96636 | uncap 但锚点错误，退化 |
+| exp25_p12rank_uncap_s96624_w65.csv | 0.96783 | 再次追平 PB |
+
+### 当日结论
+
+1. `p12` rank-only 重排不是完全无效，但只在 `s96624` 锚点下可达 PB；`s24a03/s24a01` 锚点会明显掉分。
+2. capped (`p12<=p24`) 版本在当前数据上显著伤分，短期不再作为主线。
+3. uncap (`p12>p24` 有违例) 在本赛题未观察到直接惩罚，但收益已进入平台（w55/w65 同分）。
+
+### 已生成未提交候选池
+
+- `exp25_p12rank_uncap_s96624_w75.csv`
+- `exp25_p12rank_uncap_s96624_w85.csv`
+- `exp25_p12rank_uncap_s96624_w90.csv`
+- `exp25_p12rank_uncap_s24a01_w85.csv` (低优先级)
+- `exp25_p12rank_uncap_s24a03_w85.csv` (低优先级)
+
+### Exp26: Per-Horizon Decoupled (A,B) Calibration
+
+**动机**: 共享 (A,B) 对 24h/48h 施加相同校准，但 OOF 拟合显示两个 horizon 的最优 A 值略有不同。解耦 per-horizon A 可能捕捉到 horizon 间的 scale 差异。
+
+**方法**:
+- OOF bootstrap 拟合 per-horizon (A24, A48)，两组正则化强度 (lam_reg=0.1 → A10, lam_reg=0.2 → A20)
+- B 值不用 OOF 拟合结果（OOF 给出 B>0，与 LB 方向相反），改用 PB 验证过的负 B 值
+- p48 全量校准（无 gate），p24 gap-gated r 耦合，与 PB 管线一致
+
+**Bug 修复**: 初版 `gap_gated_push_decoupled` 对 p48 错误施加了 gap-gate，导致低 gap 样本（多数）几乎不校准，med48 停在 ~0.077。修复后 med48 回到 ~0.042（A10）/ ~0.058（A20），shared baseline 复现 PB 的 0.037。
+
+**OOF 拟合参数**:
+- lam_reg=0.1: A24=1.0584, A48=1.0565 (vs shared A=1.0655)
+- lam_reg=0.2: A24=1.0328, A48=1.0318
+
+**候选池** (全部 0 违例, rho48=0.999965):
+
+| 文件 | A24 | A48 | B | med48 | Kaggle LB |
+|---|---|---|---|---|---|
+| A10_Blo | 1.0584 | 1.0565 | -0.0130 | 0.0415 | 0.96782 |
+| A10_Bpb | 1.0584 | 1.0565 | -0.0108 | 0.0420 | 0.96781 |
+| A10_Bhi | 1.0584 | 1.0565 | -0.0085 | 0.0426 | 待提交 |
+| A10_B125 | 1.0584 | 1.0565 | -0.0125 | 0.0416 | 窄搜备用 |
+| A10_B135 | 1.0584 | 1.0565 | -0.0135 | 0.0414 | 窄搜备用 |
+| A10_B145 | 1.0584 | 1.0565 | -0.0145 | 0.0411 | 窄搜备用 |
+| A10_B160 | 1.0584 | 1.0565 | -0.0160 | 0.0408 | 降级 |
+| A10_B175 | 1.0584 | 1.0565 | -0.0175 | 0.0404 | 降级 |
+| A20_Bpb | 1.0328 | 1.0318 | -0.0108 | 0.0580 | 降级 |
+| A20_Blo | 1.0328 | 1.0318 | -0.0130 | 0.0573 | 降级 |
+| A20_Bhi | 1.0328 | 1.0318 | -0.0085 | 0.0588 | 降级 |
+
+**提交策略**: 先交 A10_Blo → A10_Bpb → A10_Bhi；若 A10_Blo > 0.96783 则围绕 -0.0130 窄搜（B125/B135/B145）；前 3 个若都 < 0.96770 则停止。
+
+**结论 (2026-02-22)**:
+- A10_Blo=0.96782, A10_Bpb=0.96781，均低于 PB 0.96783，B 越负分越高的趋势一致
+- Per-horizon A 解耦（A24=1.0584 vs A48=1.0565）在 LB 上无收益，shared A=1.0655 已足够
+- A10_Bhi 跳过（B=-0.0085 预期继续下降），剩余候选池放弃
+- **方向关闭**：回归 shared (A,B) 管线
+
+## Phase 1 Plan 01: LR-Head Baseline (2026-02-22)
+
+**配置**: `--head-model logit --head-base-only --calibration-mode none`
+- CV Hybrid: 0.9707 (vs XGB baseline 0.9720)
+- **LB: 0.96274** ← 远低于 PB 0.96783，差距 ~0.005
+- 结论: LR head + base-only 特征不足以替代 XGB stacking head
+- Checkpoint 判定: LB < 0.9670，需调查 LR head 参数或回退方案
+
+## Phase 1 Plan 02: Backward Elimination + XGB Head (2026-02-22)
+
+**配置**: `--feature-level v96624_elim` (19特征, 移除 log1p_area_first + dist_slope_ci_0_5h)
+- Backward elim: 21→19 特征, CV 0.9714→0.9728
+- Full pipeline CV Hybrid: 0.9730 (CI=0.9433, WBrier=0.0142)
+- Spearman vs 0.96624: rho~0.76 (严重偏移)
+- **LB: 0.95511** ← 灾难性退化, CV-LB gap=0.018
+- 结论: XGB stacking head 在 221 样本上严重过拟合, head 层是 LB 退化的根因
+- **Phase 1 stacking head 方向彻底关闭**: LR head (0.96274) 和 XGB head (0.95511) 均远低于无 head 的 RSF baseline (0.96331)
+
+## v96624 RSF-only No-Head Baseline (2026-02-22)
+
+**配置**: `--feature-level v96624 --disable-head` (16特征, RSF=1.00, 无EST)
+- CV Hybrid: 0.9703 (postproc), CI=0.9420
+- Spearman vs 0.96624: rho~0.92 (对齐度高)
+- **LB: 0.95840** ← 低于原始锚点 0.96624 达 0.00784
+- 结论: 我们的 sksurv RSF-only 无法复现参考代码的 0.96624 质量; EST 在 v96624 特征上崩溃(Hybrid=0.9019)
+- **模型侧改进方向关闭**: 无法通过我们的 pipeline 生成比 0.96624 更好的锚点
+
+## Exp30: Deep Learning Survival Models (2026-02-22)
+
+**动机**: 测试 pycox 深度学习生存模型能否超越树模型基线
+**配置**: v96624 16特征, 2层MLP [64,64], dropout=0.3, weight_decay=1e-4, batch=256, early stopping patience=10, 5fold×10repeat CV
+
+**结果**:
+
+| 模型 | Hybrid | CI | WBrier | 状态 |
+|------|--------|-----|--------|------|
+| RSF baseline | 0.9697 | 0.9397 | 0.0174 | 参考 |
+| DeepSurv (CoxPH) | 0.9364 | 0.9072 | 0.0510 | -0.033 |
+| LogisticHazard | 0.6728 | 0.9037 | 0.4261 | 崩溃 |
+
+**分析**:
+- DeepSurv CI=0.9072 远低于 RSF 0.9397，WBrier 高 3x，221样本不足以训练神经网络
+- LogisticHazard 概率全部坍缩到 ~0.98，离散化 label_transform 在极小样本下失败
+- 止损门槛 +0.003 未达到（实际 -0.034），DeepHitSingle 按规则跳过
+- **DL 方向彻底关闭**：小样本生存分析中树模型的归纳偏置（分段常数+bagging）远优于神经网络
+
+## Exp30: Multi-Anchor Blend (Phase 4) (2026-02-22)
+
+**动机**: 复现两个公开 notebook (0.96654 ple-stacker, 0.96536 ridge-stacker)，与 0.96624 锚点 blend
+**来源**: suman2208/ple-stacker (LB=0.96654), rhythmghai (LB=0.96536)
+
+**复现结果**:
+- PLE stacker: 无 PyTorch，用 GBSA(400)+RSF(500)+XGBoost IPCW 简单平均替代 PLE 网络
+- Ridge stacker: GBSA(500)+RSF(600) + IPCW Ridge meta — Ridge 过拟合产生大量零值
+- PLE avg p48 Spearman vs 0.96624 = 0.968 (排序有实质差异，ELIGIBLE)
+
+**Blend 候选** (w = 0.96624 权重):
+- w=0.8: p48 rho_vs_ref=0.9967, 提交中...
+- w=0.7: p48 rho_vs_ref=0.9948, 待 w=0.8 结果后决定
+- w=0.5: p48 rho_vs_ref=0.9886, 暂不提交(风险过高)
+
+**提交记录**:
+- w=0.8: LB=0.96540 (2026-02-22)
+
+## Exp34: Phase 4 Track 1 — Kaggle API Fork (2026-02-23)
+
+**动机**: 通过 Kaggle API fork suman2208/ple-stacker，加 OOF 导出 cell，获取真实 notebook 产物
+**方法**: kaggle kernels pull → 插入 OOF cell → push → 等待运行 → output 下载
+
+**结果**:
+- fork: buchananliang/ple-stacker-oof-fork (version 2, GPU T4)
+- submission.csv: 95行，prob_48h std=0.414（分布健康）
+- oof_preds.csv: 221行，12列（gb/rsf/xgb × 4时间点）
+- rho48 vs 0.96624 = 0.830（差异显著）
+- **LB = 0.96086**（Gate 1 失败，< 0.96624）
+
+**分析**:
+- 原始 notebook LB=0.96654，fork 只得 0.96086，差距 0.006
+- PLE stacker 神经网络训练不确定性 + GPU 随机性导致复现失败
+- rhythmghai/ridge-stacker 私有（403），无第二个可访问高分 notebook
+- **Track 1 止损，切 Track 3（RSF 超参网格）**
+
+## Exp35: Phase 4 Track 3 — RSF 超参网格 (2026-02-23)
+
+**动机**: 在复现 pipeline 基础上搜索更优 RSF 超参，目标 LB > 0.96624
+**网格**: n_estimators×max_features×min_samples_leaf，5次预算（4配置+1版本验证）
+
+**结果**:
+
+| 配置 | rho_p48 | LB | 备注 |
+|------|---------|-----|------|
+| n=500/sqrt/msl=3 | 0.971 | **0.91089** | 分布压缩 |
+| n=500/0.5/msl=3 | 0.970 | **0.90860** | 分布压缩 |
+
+**根因分析**:
+- R1 prob_48h std=0.102 vs 参考 std=0.364 — 预测值全压缩在 0.17–0.49
+- rho_p48=0.97（排序相似）但 Brier score 崩溃（值域丧失区分度）
+- 网格脚本特征工程/后处理与参考 pipeline 不一致
+- **Phase 4 Track 3 失败，当前最优仍为 0.96624/0.96681**

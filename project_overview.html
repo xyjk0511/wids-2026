@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiDS 2026 Kaggle - 项目全解析</title>
+<style>
+  :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --green: #4ade80; --orange: #fb923c; --red: #f87171; --purple: #a78bfa; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem; }
+  h2 { font-size: 1.5rem; color: var(--accent); margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 1.15rem; color: var(--orange); margin: 1.5rem 0 0.5rem; }
+  h4 { font-size: 1rem; color: var(--purple); margin: 1rem 0 0.5rem; }
+  p { margin-bottom: 0.8rem; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0; }
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .score-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+  .score-box .label { color: var(--muted); font-size: 0.85rem; }
+  .score-box .value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .score-box .value.green { color: var(--green); }
+  .score-box .value.orange { color: var(--orange); }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th { background: var(--card); color: var(--accent); padding: 0.6rem 0.8rem; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(56,189,248,0.05); }
+  code { background: #0f172a; border: 1px solid var(--border); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.88rem; color: var(--green); }
+  pre { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; line-height: 1.6; color: var(--green); }
+  .insight { background: linear-gradient(135deg, rgba(167,139,250,0.1), rgba(56,189,248,0.1)); border: 1px solid var(--purple); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+  .insight-title { color: var(--purple); font-weight: 700; margin-bottom: 0.5rem; }
+  .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-right: 0.3rem; }
+  .tag-green { background: rgba(74,222,128,0.15); color: var(--green); }
+  .tag-orange { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .tag-red { background: rgba(248,113,113,0.15); color: var(--red); }
+  .tag-blue { background: rgba(56,189,248,0.15); color: var(--accent); }
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+  .flow-box { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+  .flow-arrow { color: var(--accent); font-weight: 700; }
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.5rem 0; }
+  .toc a { color: var(--accent); text-decoration: none; display: block; padding: 0.3rem 0; }
+  .toc a:hover { text-decoration: underline; }
+  .highlight { color: var(--orange); font-weight: 600; }
+  .svg-diagram { margin: 1.5rem auto; display: block; max-width: 720px; }
+  .svg-diagram text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  .svg-caption { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 0.3rem 0 1rem; }
+
+  /* === Interactive Column Explorer v3 === */
+  .ce-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin: 1.5rem 0; overflow: hidden; }
+  .ce-tabs { display: flex; flex-wrap: wrap; border-bottom: 2px solid var(--border); background: #0f172a; }
+  .ce-tabs button { background: none; border: none; color: var(--muted); padding: 0.6rem 1rem; font-size: 0.85rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.2s, border-color 0.2s; font-family: inherit; }
+  .ce-tabs button:hover { color: var(--text); }
+  .ce-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .ce-body { display: flex; min-height: 380px; }
+  .ce-list { width: 170px; min-width: 170px; border-right: 1px solid var(--border); padding: 0.5rem; overflow-y: auto; max-height: 400px; display: flex; flex-direction: column; gap: 2px; }
+  .ce-list button { display: block; width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 4px; padding: 0.35rem 0.5rem; font-family: 'Consolas','Courier New',monospace; font-size: 0.78rem; color: var(--muted); cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ce-list button:hover { color: var(--text); border-color: var(--border); }
+  .ce-list button.active { color: var(--accent); border-color: var(--accent); background: rgba(56,189,248,0.08); }
+  .ce-list button.removed { text-decoration: line-through; color: #64748b; }
+  .ce-list button.removed::after { content: ' x'; color: var(--red); font-size: 0.65rem; text-decoration: none; }
+  .ce-scene { flex: 1; background: #0f172a; display: flex; align-items: center; justify-content: center; padding: 0.4rem; }
+  .ce-scene svg { display: block; width: 100%; max-width: 640px; }
+  .ce-info { width: 185px; min-width: 185px; border-left: 1px solid var(--border); padding: 0.7rem; font-size: 0.82rem; overflow-y: auto; max-height: 400px; }
+  .ce-info .ce-info-hint { color: var(--muted); font-size: 0.82rem; text-align: center; padding-top: 3rem; }
+  .ce-info .ce-lbl { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.6rem; }
+  .ce-info .ce-val { color: var(--text); font-size: 0.85rem; margin-bottom: 0.2rem; }
+  .ce-info .ce-val.mono { font-family: 'Consolas','Courier New',monospace; color: var(--accent); font-weight: 600; }
+  .ce-info .ce-hi { color: var(--red); }
+  .ce-info .ce-lo { color: var(--green); }
+  .ce-info .ce-removed-tag { display: inline-block; background: rgba(248,113,113,0.15); color: var(--red); font-size: 0.72rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-top: 0.3rem; }
+  .ce-info .ce-info-name { font-family: 'Consolas','Courier New',monospace; color: var(--accent); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; word-break: break-all; }
+  .ce-info .ce-info-type { color: var(--muted); font-size: 0.72rem; margin-bottom: 0.5rem; }
+  .ce-info .ce-info-desc { color: var(--text); font-size: 0.8rem; line-height: 1.45; margin-bottom: 0.7rem; }
+  .ce-info .ce-val-hi { color: var(--red); font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .ce-info .ce-val-lo { color: var(--green); font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .ce-info .ce-val-label { font-size: 0.7rem; opacity: 0.7; }
+  .ce-info .ce-removed-badge { display: inline-block; background: rgba(248,113,113,0.15); color: var(--red); font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 3px; margin-top: 0.5rem; }
+  .ce-info .ce-removed-reason { color: var(--muted); font-size: 0.75rem; margin-top: 0.3rem; line-height: 1.4; }
+  /* SVG scene elements */
+  .ce-scene-group { display: none; }
+  .ce-scene-group.active { display: block; }
+  .ce-el { opacity: 0.15; transition: opacity 0.4s ease; }
+  .ce-el.bright { opacity: 1; }
+  .ce-divider { opacity: 0.3; }
+  /* Glow animation for highlighted elements */
+  @keyframes ce-glow { 0%,100% { filter: drop-shadow(0 0 2px currentColor); } 50% { filter: drop-shadow(0 0 8px currentColor); } }
+  .ce-el.bright { animation: ce-glow 2s ease-in-out infinite; }
+  @keyframes ce-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .ce-el.bright { animation: ce-glow 2s ease-in-out infinite, ce-fade-in 0.4s ease forwards; }
+
+  @media (max-width: 800px) {
+    .ce-body { flex-direction: column; }
+    .ce-list { width: 100%; min-width: 0; max-height: 120px; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); }
+    .ce-list button { width: auto; }
+    .ce-info { width: 100%; min-width: 0; max-height: none; border-left: none; border-top: 1px solid var(--border); }
+    .ce-tabs button { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>WiDS 2026 Kaggle 竞赛项目全解析</h1>
+<p class="subtitle">野火生存分析 -- 预测山火到达疏散区的概率</p>
+
+<div class="toc">
+  <strong>目录</strong>
+  <a href="#overview">1. 项目总览</a>
+  <a href="#features">2. features.py -- 特征工程</a>
+  <a href="#models">3. models.py -- 模型架构</a>
+  <a href="#train">4. train.py -- 训练流程</a>
+  <a href="#evaluation">5. evaluation.py -- 评分体系</a>
+  <a href="#monotonic">6. monotonic.py -- 后处理</a>
+  <a href="#experiments">7. 实验记录</a>
+  <a href="#params">8. 全部参数详解</a>
+  <a href="#data-cols">9. 数据列详解</a>
+</div>
+
+<!-- ==================== Section 1 ==================== -->
+<h2 id="overview">1. 项目总览</h2>
+
+<h3>这是什么?</h3>
+<p>这是一个参加 <strong>WiDS Global Datathon 2026</strong> Kaggle 竞赛的项目。任务：根据山火发生后前 5 小时的观测数据，预测火灾在 12h / 24h / 48h / 72h 内烧到 5 公里疏散区的概率。</p>
+
+<h3>数据规模</h3>
+<div class="card">
+  <p><strong>极小数据集：</strong>训练集 221 个样本，测试集 95 个样本，34 个原始特征。</p>
+  <p>这意味着传统树模型比深度学习更合适，降低方差（多种子平均）比调参更重要。</p>
+</div>
+
+<h3>当前成绩</h3>
+<div class="score-grid">
+  <div class="score-box"><div class="label">本地 CV Hybrid</div><div class="value">0.9721</div></div>
+  <div class="score-box"><div class="label">Kaggle LB (最佳)</div><div class="value green">0.96331</div></div>
+  <div class="score-box"><div class="label">参考目标</div><div class="value orange">0.96624</div></div>
+  <div class="score-box"><div class="label">差距</div><div class="value" style="color:var(--red)">-0.00293</div></div>
+</div>
+
+<h3>技术路线</h3>
+<div class="flow">
+  <div class="flow-box">train.csv (221 rows)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">remove_redundant (34&rarr;24)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">add_engineered (+20)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">get_feature_set("medium", ~36)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">RSF + EST (5 seeds x 2 = 10 models)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">submission_postprocess</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">submission.csv</div>
+</div>
+
+<!-- ==================== Section 2 ==================== -->
+<h2 id="features">2. features.py -- 特征工程</h2>
+
+<p>这个模块是整个管道的"数据厨房" -- 把 34 个原始火灾特征加工成模型能用的输入。分三个阶段：</p>
+
+<h3>阶段一：去冗余</h3>
+<div class="card">
+  <p>删除 10 个相关系数 |r| &gt; 0.95 的冗余特征。示例：</p>
+  <table>
+    <tr><th>删除</th><th>保留</th><th>相关系数</th></tr>
+    <tr><td><code>relative_growth_0_5h</code></td><td><code>area_growth_rel_0_5h</code></td><td>r = 1.0</td></tr>
+    <tr><td><code>projected_advance_m</code></td><td><code>-dist_change_ci_0_5h</code></td><td>r = -1.0</td></tr>
+    <tr><td><code>centroid_displacement_m</code></td><td><code>radial_growth_m</code></td><td>r ~ 0.99</td></tr>
+    <tr><td><code>log1p_growth</code></td><td><code>area_growth_abs_0_5h</code></td><td>r ~ 0.97</td></tr>
+  </table>
+  <p>结果：34 &rarr; 24 个特征。对于使用 <code>max_features="sqrt"</code> 的树模型，去冗余能提高每次分裂时选中真正有用特征的概率。</p>
+</div>
+
+<h3>阶段二：特征工程 (add_engineered)</h3>
+
+<h4>第一轮：基础物理量</h4>
+<table>
+  <tr><th>特征</th><th>公式</th><th>物理含义</th></tr>
+  <tr><td><code>log_dist</code></td><td>log1p(距离)</td><td>压缩距离的长尾分布</td></tr>
+  <tr><td><code>dist_area_ratio</code></td><td>距离 / sqrt(面积)</td><td>距离近 + 火大 = 威胁高</td></tr>
+  <tr><td><code>has_growth</code></td><td>增长 &gt; 0 ? 1 : 0</td><td>火有没有在扩大（二值标记）</td></tr>
+  <tr><td><code>speed_dist_ratio</code></td><td>接近速度 / 距离</td><td>速度快 + 距离近 = 紧急</td></tr>
+  <tr><td><code>eta_hours</code></td><td>距离 / 接近速度</td><td>预估到达时间（ETA）</td></tr>
+  <tr><td><code>inv_dist</code></td><td>1 / 距离</td><td>放大近距离的区分度</td></tr>
+  <tr><td><code>dist_close</code></td><td>距离 &lt; 5km ? 1 : 0</td><td>是否已在疏散区阈值内</td></tr>
+  <tr><td><code>growth_dist_ratio</code></td><td>增长率 / 距离</td><td>增长快 + 距离近 = 危险</td></tr>
+</table>
+
+<h4>第二轮：重叠区特征 (657m ~ 4545m)</h4>
+<p>这个距离范围内的样本最难区分（有的烧到了，有的没有）。这些特征专门针对这个"模糊地带"：</p>
+<table>
+  <tr><th>特征</th><th>公式</th><th>物理含义</th></tr>
+  <tr><td><code>dist_zone_score</code></td><td>sigmoid((距离 - 2600) / 1000)</td><td>用 S 型曲线给重叠区打分</td></tr>
+  <tr><td><code>threat_static</code></td><td>sqrt(面积) / 距离</td><td>静态威胁指数</td></tr>
+  <tr><td><code>has_dynamics</code></td><td>观测次数 &gt; 1 ? 1 : 0</td><td>有没有多次观测</td></tr>
+  <tr><td><code>effective_closing</code></td><td>接近速度 * 对齐度</td><td>只有朝社区方向的速度才算"有效接近"</td></tr>
+  <tr><td><code>dist_neg_exp</code></td><td>exp(-距离 / 5000)</td><td>指数衰减，5km 尺度</td></tr>
+  <tr><td><code>hour_sin/cos</code></td><td>sin/cos(小时 / 24)</td><td>圆形时间编码（23点和0点是相邻的）</td></tr>
+</table>
+
+<h4>第三轮：交互特征</h4>
+<table>
+  <tr><th>特征</th><th>公式</th><th>物理含义</th></tr>
+  <tr><td><code>threat_urgency</code></td><td>距离 * 接近速度</td><td>距离和速度的联合效应</td></tr>
+  <tr><td><code>directional_threat</code></td><td>面积 * 对齐度</td><td>大火 + 对准社区 = 方向性威胁</td></tr>
+  <tr><td><code>expansion_threat</code></td><td>径向增长 * (1/距离)</td><td>快速扩张 + 近距离 = 扩张威胁</td></tr>
+</table>
+
+<h3>阶段三：特征集选择</h3>
+<table>
+  <tr><th>级别</th><th>基础特征</th><th>+ 工程特征</th><th>总计</th><th>状态</th></tr>
+  <tr><td>minimal</td><td>6</td><td>0</td><td>6</td><td>快速实验用</td></tr>
+  <tr><td><strong>medium</strong></td><td><strong>16</strong></td><td><strong>+20</strong></td><td><strong>~36</strong></td><td><span class="tag tag-green">当前最佳</span></td></tr>
+  <tr><td>full</td><td>24</td><td>+20</td><td>~44</td><td>略逊于 medium</td></tr>
+  <tr><td>v96624</td><td>13+3</td><td>0</td><td>16</td><td>复现参考基线</td></tr>
+</table>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p><code>eta_hours</code>（预估到达时间）是排列重要性最高的工程特征（CI_drop=0.00783），因为它直接编码了"火什么时候到"这个核心问题，比单独看距离或速度更有信息量。</p>
+  <p>medium 胜出的原因：在 221 个样本上，过多特征会引入噪声。36 个特征是信噪比的最佳平衡点 -- 足够多的交互/重叠区特征来帮助模型，又不至于过拟合。</p>
+</div>
+
+<!-- ==================== Section 3 ==================== -->
+<h2 id="models">3. models.py -- 模型架构</h2>
+
+<p>7 种生存分析模型，共享统一接口：<code>fit(X, y_time, y_event)</code> 和 <code>predict_proba(X)</code> 返回 <code>{12: [...], 24: [...], 48: [...], 72: [...]}</code>。</p>
+
+<h3>阵营 A：生存函数模型（连续时间）</h3>
+<p>学习一条完整的生存曲线 S(t)，然后在 12/24/48/72h 四个时间点上取值。</p>
+<table>
+  <tr><th>模型</th><th>库</th><th>核心假设</th><th>状态</th></tr>
+  <tr><td>CoxPH</td><td>lifelines</td><td>比例风险（形状相同，倍数不同）</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td>WeibullAFT</td><td>lifelines</td><td>风险单调递增</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td>LogNormalAFT</td><td>lifelines</td><td>风险先升后降</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td><strong>RSF</strong></td><td>sksurv</td><td>无参数假设，让数据说话</td><td><span class="tag tag-green">主力</span></td></tr>
+  <tr><td><strong>EST</strong></td><td>sksurv</td><td>同 RSF，分裂点随机选取</td><td><span class="tag tag-green">主力</span></td></tr>
+  <tr><td>GBSA</td><td>sksurv</td><td>梯度提升生存分析</td><td><span class="tag tag-red">失败 (#10)</span></td></tr>
+</table>
+
+<h3>阵营 B：逐时间窗口分类模型（离散时间）</h3>
+<p>每个时间窗口当成独立的二分类问题："H 小时内烧到了吗？是/否"</p>
+<table>
+  <tr><th>模型</th><th>库</th><th>状态</th></tr>
+  <tr><td>MultiHorizonXGB</td><td>xgboost</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td>RankXGB</td><td>xgboost</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td>MultiHorizonLGBM</td><td>lightgbm</td><td><span class="tag tag-blue">可用</span></td></tr>
+  <tr><td>MultiHorizonCatBoost</td><td>catboost</td><td><span class="tag tag-blue">可用</span></td></tr>
+</table>
+
+<h3>RSF vs EST：当前最佳组合</h3>
+<div class="card">
+  <p><strong>RSF：</strong>每个节点从 sqrt(n) 个候选特征中选<em>最优</em>分裂点（贪心搜索）。</p>
+  <p><strong>EST：</strong>每个节点从 sqrt(n) 个候选特征中<em>随机</em>选分裂点（不搜索最优）。</p>
+  <p>EST 单棵树更弱，但集成后方差更低。两者组合提供真正的模型多样性 -- 实验 #9 证明了这一点（LB +0.00122）。</p>
+</div>
+
+<h3>关键实现：_sf_to_probs</h3>
+<pre>def _sf_to_probs(surv_fns, horizons):
+    for h in horizons:
+        for i, fn in enumerate(surv_fns):
+            # 边界处理，与原始 0.96624 代码对齐
+            s_val = fn(h) if h &lt;= fn.x[-1] else fn(fn.x[-1])
+            p_arr[i] = 1.0 - s_val
+    return result</pre>
+<p>将阶梯形生存函数转换为时间窗口概率。边界处理 <code>fn(fn.x[-1])</code> 是与参考 0.96624 代码对齐的关键。</p>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>阵营 A（生存函数）完胜阵营 B（逐窗口分类），因为生存曲线天然保证时间单调性（S(t) 递减 &rarr; P(t) 递增），而独立分类器需要额外后处理来强制单调。</p>
+  <p>GBSA 在实验 #10 中失败，因为其 12h 概率被压缩到极窄范围（0.212-0.268）。C-Index 对"近似平局"极其敏感 -- 微小的排序错误就会导致分数崩溃。</p>
+</div>
+
+<!-- ==================== Section 4 ==================== -->
+<h2 id="train">4. train.py -- 训练流程</h2>
+
+<h3>第一步：数据加载</h3>
+<div class="flow">
+  <div class="flow-box">read_csv</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">去冗余 (34&rarr;24)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">特征工程 (+20)</div>
+  <span class="flow-arrow">&rarr;</span>
+  <div class="flow-box">选特征集("medium") &rarr; ~36 列</div>
+</div>
+
+<h3>第二步：交叉验证（仅评估）</h3>
+<div class="card">
+  <p><strong>策略：</strong>RepeatedStratifiedKFold，5 折 x 10 次重复 = 50 轮</p>
+  <p><strong>分层依据：</strong>2 类（event=1 vs event=0）</p>
+  <p><strong>每折处理：</strong>StandardScaler 在训练集 fit_transform，在验证集 transform（防止数据泄露）</p>
+  <p><strong>模型：</strong>仅 RSF 单模型（快速评估）</p>
+  <p><strong>OOF 累加：</strong>每个样本被预测 10 次（每次重复 1 次），取平均</p>
+</div>
+<pre># OOF 累加逻辑
+oof_preds[h][va_idx] += preds[h]   # 累加
+oof_counts[va_idx] += 1             # 计数
+# 所有折完成后：
+oof_preds[h][mask] /= oof_counts[mask]  # 平均</pre>
+
+<h3>第三步：全量重训 + 生成提交</h3>
+<div class="card">
+  <p><strong>共 10 个模型：</strong>5 个种子 x 2 种模型（RSF + EST）</p>
+  <p><strong>种子：</strong>[42, 123, 456, 789, 2026]</p>
+  <p><strong>每个模型：</strong>n_estimators=200, max_features="sqrt"</p>
+  <p><strong>融合方式：</strong>10 个模型预测的简单平均</p>
+  <p><strong>标准化：</strong>单个 StandardScaler 在全部 221 个训练样本上 fit</p>
+</div>
+<pre># 多模型平均
+for seed in [42, 123, 456, 789, 2026]:
+    rsf = RSF(n_estimators=200, random_state=seed)
+    rsf.fit(X_train_s, y_time, y_event)
+    all_preds.append(rsf.predict_proba(X_test_s))
+
+    est = EST(n_estimators=200, random_state=seed)
+    est.fit(X_train_s, y_time, y_event)
+    all_preds.append(est.predict_proba(X_test_s))
+
+test_preds = {h: mean([p[h] for p in all_preds]) for h in HORIZONS}</pre>
+
+<h3>第四步：后处理 + 诊断</h3>
+<p><code>submission_postprocess</code> 之后，自动运行三项检查：</p>
+<table>
+  <tr><th>检查项</th><th>内容</th></tr>
+  <tr><td>72h 全 1 检查</td><td>所有 prob_72h 值 == 1.0</td></tr>
+  <tr><td>单调性检查</td><td>prob_12h &le; prob_24h &le; prob_48h &le; prob_72h</td></tr>
+  <tr><td>Spearman 对比 0.96624</td><td>与参考提交的秩相关系数</td></tr>
+</table>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>CV 用单 RSF，提交用 RSF+EST x5 种子，配置不同。所以 CV 分数（0.9721）不能直接预测 LB 分数。实验也证实了：CV 几乎不变，但 LB 从 0.95054 到 0.96331 波动很大。</p>
+  <p>逐折 StandardScaler 在 221 个样本上至关重要 -- 如果全局 fit 一次再 transform 所有折，验证集就"看到了"训练集的统计量，造成数据泄露，小数据集上这种泄露的影响更显著。</p>
+</div>
+
+<!-- ==================== Section 5 ==================== -->
+<h2 id="evaluation">5. evaluation.py -- 评分体系</h2>
+
+<h3>混合分数公式</h3>
+<div class="card" style="text-align:center; font-size: 1.1rem;">
+  <strong>Hybrid = 0.3 * C-Index + 0.7 * (1 - WeightedBrier)</strong>
+</div>
+
+<h3>C-Index（权重 30%）-- 排序能力</h3>
+<div class="card">
+  <p><strong>输入：</strong>仅 <code>prob_12h</code></p>
+  <p><strong>问题：</strong>对于任意一对样本 (A, B)，如果 A 比 B 先烧到社区，模型是否给 A 分配了更高的风险分数？</p>
+  <p><strong>关键特性：</strong>只关心相对排序。所有概率乘以 2，C-Index 不变。</p>
+  <p><strong>范围：</strong>0.5 = 随机猜，1.0 = 完美排序</p>
+</div>
+<pre>ci = lifelines_cindex(y_time, -risk_scores, y_event)
+# 取负号是因为 lifelines 约定"越大 = 生存越久"
+# 但 prob_12h 的含义是"越大 = 越危险 = 生存越短"</pre>
+
+<h3>加权 Brier Score（权重 70%）-- 校准精度</h3>
+<div class="card">
+  <p><strong>输入：</strong><code>prob_24h</code>、<code>prob_48h</code>、<code>prob_72h</code>（不含 12h！）</p>
+  <p><strong>公式：</strong>WeightedBrier = 0.3 * Brier@24h + <strong>0.4 * Brier@48h</strong> + 0.3 * Brier@72h</p>
+  <p><strong>Brier Score：</strong>mean((预测概率 - 真实标签)^2) -- 越低越好</p>
+</div>
+
+<h4>标签构建规则（每个时间窗口 H）</h4>
+<table>
+  <tr><th>条件</th><th>标签</th><th>解释</th></tr>
+  <tr><td>event=1, time &le; H</td><td>1</td><td>火在 H 小时内烧到了</td></tr>
+  <tr><td>event=1, time &gt; H</td><td>0</td><td>烧到了但在 H 之后</td></tr>
+  <tr><td>event=0, time &ge; H</td><td>0</td><td>观测到 H 都没烧到</td></tr>
+  <tr><td>event=0, time &lt; H</td><td><span class="tag tag-red">排除</span></td><td>审查：在 H 之前失去追踪，结果未知</td></tr>
+</table>
+
+<h3>评分流程图</h3>
+<pre>prob_12h ─────────────────────&gt; C-Index (排序) ──&gt; x0.3 ─┐
+                                                            ├──&gt; Hybrid
+prob_24h ──&gt; Brier@24h ──&gt; x0.3 ─┐                        │
+prob_48h ──&gt; Brier@48h ──&gt; x0.4 ─┼─&gt; WeightedBrier        │
+prob_72h ──&gt; Brier@72h ──&gt; x0.3 ─┘   &rarr; (1-WB) &rarr; x0.7 ─┘</pre>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>C-Index 和 Brier 可能冲突：C-Index 只要排序对（你可以把所有概率压缩到 [0.01, 0.02] 范围内，C-Index 照样满分），但 Brier 要求绝对值准确。GBSA 在实验 #10 中的失败就是这个矛盾的极端体现。</p>
+  <p>72h Brier 权重 0.3 但贡献几乎为零，因为 prob_72h=1.0 且几乎所有标签也是 1。真正的战场在 24h 和 48h。</p>
+  <p>审查样本的排除机制意味着每个时间窗口的 Brier 是在不同子集上计算的。48h 的有效样本最多，所以权重最高（0.4）。</p>
+</div>
+
+<!-- ==================== Section 6 ==================== -->
+<h2 id="monotonic">6. monotonic.py -- 后处理</h2>
+
+<p>最后一道关卡：确保输出的概率"符合物理常识"。</p>
+
+<h3>submission_postprocess（提交专用）</h3>
+<pre># 第一步：12h 独立处理（仅用于 C-Index 排序）
+result[12] = clip(prob_dict[12], 0.01, 0.99)
+
+# 第二步：24h/48h/72h 单独的单调链
+prev = prob_dict[24]
+result[48] = max(prob_dict[48], prev)    # 48h &ge; 24h
+result[72] = max(prob_dict[72], result[48])  # 72h &ge; 48h
+
+# 第三步：72h 硬编码为 1.0
+result[72] = 1.0
+
+# 第四步：裁剪 24h/48h
+result[24] = clip(result[24], 0.01, 0.99)
+result[48] = clip(result[48], 0.01, 0.99)</pre>
+
+<h3>关键设计决策</h3>
+<table>
+  <tr><th>决策</th><th>原因</th></tr>
+  <tr><td>12h 与 24h+ 解耦</td><td>12h 只影响 C-Index（排序），24h+ 只影响 Brier（校准）。强制 24h &ge; 12h 可能扭曲 24h 的校准精度。</td></tr>
+  <tr><td>裁剪到 [0.01, 0.99]</td><td>Brier 惩罚是二次的。裁剪把最坏情况从 (0-1)^2=1.0 限制到 (0.01-1)^2=0.98。C-Index 不受影响（排序不变）。</td></tr>
+  <tr><td>72h = 1.0 硬编码</td><td>几乎所有符合条件的火灾在 72h 内都会到达疏散区。预测 1.0 能最小化 Brier。72h 不影响 C-Index。</td></tr>
+</table>
+
+<h3>enforce_monotonicity vs submission_postprocess</h3>
+<table>
+  <tr><th></th><th>enforce_monotonicity</th><th>submission_postprocess</th></tr>
+  <tr><td>12h 处理</td><td>参与单调链</td><td>独立裁剪</td></tr>
+  <tr><td>单调链</td><td>12h &rarr; 24h &rarr; 48h &rarr; 72h</td><td>仅 24h &rarr; 48h &rarr; 72h</td></tr>
+  <tr><td>72h</td><td>保持模型输出</td><td>硬编码 1.0</td></tr>
+  <tr><td>裁剪范围</td><td>[0, 1]</td><td>[0.01, 0.99]</td></tr>
+  <tr><td>用途</td><td>通用工具</td><td><span class="tag tag-green">竞赛提交专用</span></td></tr>
+</table>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>12h 与 24h+ 解耦看似微妙但很重要。实验 #4 尝试了 logit 空间校准，把 12h 中位数从 0.015 提升到 0.067，但 LB 反而下降了 0.012，因为校准扭曲了 24h/48h 的绝对值。</p>
+  <p>这个模块是整个管道中唯一"注入领域知识"的地方（72h=1.0 不是模型学出来的，是人类根据数据分布做的判断）。这种"模型 + 规则"的混合策略在小数据竞赛中很常见。</p>
+</div>
+
+<!-- ==================== Section 7 ==================== -->
+<h2 id="experiments">7. 实验记录</h2>
+
+<table>
+  <tr><th>#</th><th>日期</th><th>模型</th><th>CV</th><th>LB</th><th>变化</th><th>关键发现</th></tr>
+  <tr><td>1</td><td>2/8</td><td>集成 (RankXGB+RSF+GBSA)</td><td>0.9721</td><td>0.95054</td><td>--</td><td>基线集成</td></tr>
+  <tr><td>2</td><td>2/8</td><td>集成 v2 (L2 + bootstrap)</td><td>0.9692</td><td>0.95739</td><td><span class="tag tag-green">+0.00685</span></td><td>正则化有效</td></tr>
+  <tr><td>3</td><td>2/9</td><td>RSF 单模型 (v96624 特征集)</td><td>0.9697</td><td>0.95873</td><td><span class="tag tag-green">+0.00134</span></td><td>对齐参考代码</td></tr>
+  <tr><td>4</td><td>2/10</td><td>RSF + logit 校准</td><td>0.9622</td><td>0.94688</td><td><span class="tag tag-red">-0.01185</span></td><td>校准严重伤害 LB</td></tr>
+  <tr><td>5</td><td>2/10</td><td>RSF (n_est=1000)</td><td>0.9690</td><td>0.95952</td><td><span class="tag tag-green">+0.01264</span></td><td>更多树，边际收益</td></tr>
+  <tr><td>6</td><td>2/11</td><td>RSF MEDIUM 特征集 (36个)</td><td>0.9721</td><td>0.96174</td><td><span class="tag tag-green">+0.00222</span></td><td>特征集比调参更重要</td></tr>
+  <tr><td>7</td><td>2/11</td><td>RSF max_features=12</td><td>0.9724</td><td>0.96136</td><td><span class="tag tag-red">-0.00038</span></td><td>超参调优导致过拟合</td></tr>
+  <tr><td>8</td><td>2/11</td><td>RSF 多种子平均 (5 seeds)</td><td>0.9721</td><td>0.96209</td><td><span class="tag tag-green">+0.00073</span></td><td>方差缩减有效</td></tr>
+  <tr><td>9</td><td>2/11</td><td>RSF + EST (10 模型)</td><td>0.9721</td><td><strong>0.96331</strong></td><td><span class="tag tag-green">+0.00122</span></td><td><span class="tag tag-green">最佳</span> 模型多样性</td></tr>
+  <tr><td>10</td><td>2/11</td><td>GBSA 逐窗口拆分</td><td>0.9721</td><td>0.94910</td><td><span class="tag tag-red">-0.01421</span></td><td>GBSA 12h 压缩，已回退</td></tr>
+</table>
+
+<h3>核心结论</h3>
+<div class="card">
+  <p>1. <strong>特征集 &gt; 超参数：</strong>切换到 MEDIUM 特征集带来 +0.00222，而调 max_features 反而 -0.00038。</p>
+  <p>2. <strong>模型多样性 &gt; 更多树：</strong>加入 EST（不同分裂策略）带来 +0.00122，而 n_estimators 从 200 增到 1000 收益甚微。</p>
+  <p>3. <strong>别动有效的东西：</strong>Logit 校准（实验 #4）和逐窗口拆分（实验 #10）都导致了严重回退。</p>
+  <p>4. <strong>CV-LB 差距稳定：</strong>成功实验中约 0.009-0.010，说明泛化健康。</p>
+</div>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>最引人注目的规律：CV 分数几乎不动（0.9690-0.9724），但 LB 从 0.94688 到 0.96331 波动巨大。这意味着微小的泛化差异在排行榜上被放大了。在 95 个测试样本上，哪怕 1-2 个样本的排序变化就能让分数波动 0.001 以上。</p>
+</div>
+
+<!-- ==================== Section 8 ==================== -->
+<h2 id="params">8. 全部参数详解</h2>
+
+<p>整个项目涉及 60+ 个可调参数，分布在配置、模型、特征工程、后处理和评分五个层面。以下逐一说明。</p>
+
+<h3>8.1 交叉验证参数 (config.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>N_SPLITS</code></td><td>5</td><td>K-Fold 的 K，每次重复分 5 折</td></tr>
+  <tr><td><code>N_REPEATS</code></td><td>10</td><td>重复次数，总共 5x10=50 轮训练</td></tr>
+  <tr><td><code>RANDOM_STATE</code></td><td>42</td><td>随机种子，保证 CV 折划分可复现</td></tr>
+  <tr><td><code>HORIZONS</code></td><td>[12, 24, 48, 72]</td><td>预测的 4 个时间窗口（小时）</td></tr>
+</table>
+<div class="card">
+  <p>为什么 5 折 x 10 次？221 个样本太少，单次 5 折的方差很大。重复 10 次用不同的随机划分，每个样本被预测 10 次取平均，OOF 估计更稳定。</p>
+</div>
+
+<h3>8.2 RSF 参数 (models.py)</h3>
+<table>
+  <tr><th>参数</th><th>类默认值</th><th>提交实际用值</th><th>含义</th></tr>
+  <tr><td><code>n_estimators</code></td><td>1000</td><td><strong>200</strong></td><td>森林里树的数量。CV 用 1000（单模型需要足够多树），提交用 200（10 个模型平均，总树数=2000）</td></tr>
+  <tr><td><code>max_depth</code></td><td>5</td><td>5</td><td>每棵树最大深度。221 样本上深度 5 已足够，再深就过拟合</td></tr>
+  <tr><td><code>min_samples_leaf</code></td><td>5</td><td>5</td><td>叶节点最少样本数，约占训练集的 2.3%，防止叶子太细碎</td></tr>
+  <tr><td><code>min_samples_split</code></td><td>10</td><td>10</td><td>节点分裂最少样本数，低于 10 个样本就不再分了</td></tr>
+  <tr><td><code>max_features</code></td><td>"sqrt"</td><td>"sqrt"</td><td>每次分裂随机选 sqrt(36)&asymp;6 个候选特征。实验 #7 试过 12，LB 反而降了</td></tr>
+  <tr><td><code>random_state</code></td><td>42</td><td>5 个种子轮换</td><td>[42, 123, 456, 789, 2026]，每个种子产生不同的随机森林</td></tr>
+  <tr><td><code>n_jobs</code></td><td>-1</td><td>-1</td><td>用所有 CPU 核心并行训练</td></tr>
+</table>
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p><code>max_features="sqrt"</code> 是 RSF 的核心正则化手段。36 个特征里每次只看 6 个，迫使不同树关注不同特征子集，降低树之间的相关性。实验 #7 把它改成 12，CV 微涨 +0.0003 但 LB 跌了 -0.00038 -- 典型的 full retrain 过拟合信号。</p>
+</div>
+
+<h3>8.3 EST 参数 (models.py)</h3>
+<div class="card">
+  <p>参数列表与 RSF <strong>完全相同</strong>。区别不在参数，在算法：</p>
+  <p><strong>RSF：</strong>每个节点从 sqrt(n) 个候选特征中搜索<em>最优</em>分裂点（贪心搜索）</p>
+  <p><strong>EST：</strong>每个节点从 sqrt(n) 个候选特征中<em>随机</em>选分裂点（不搜索最优）</p>
+  <p>EST 单棵树更弱，但集成后方差更低，和 RSF 组合提供真正的模型多样性。</p>
+</div>
+
+<h3>8.4 GBSA 参数 (models.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>n_estimators</code></td><td>300</td><td>提升轮数（比 RSF 多，因为每轮只加一棵浅树）</td></tr>
+  <tr><td><code>max_depth</code></td><td>3</td><td>每棵树深度，比 RSF 浅（梯度提升用浅树叠加）</td></tr>
+  <tr><td><code>learning_rate</code></td><td>0.02</td><td>学习率，每棵新树的贡献缩小到 2%，防止过拟合</td></tr>
+  <tr><td><code>subsample</code></td><td>0.8</td><td>每轮随机抽 80% 样本训练（随机梯度提升）</td></tr>
+  <tr><td><code>dropout_rate</code></td><td>0.1</td><td>每轮随机丢弃 10% 已有的树（类似 DART 策略）</td></tr>
+  <tr><td><code>min_samples_leaf</code></td><td>8</td><td>叶节点最少 8 个样本</td></tr>
+  <tr><td><code>min_samples_split</code></td><td>16</td><td>分裂最少 16 个样本</td></tr>
+</table>
+<div class="card">
+  <p><span class="tag tag-red">已失败</span> 实验 #10 证明 GBSA 不适合本任务：12h 概率被压缩到 0.212-0.268 的极窄范围，C-Index 对这种"近似平局"极其敏感，导致分数崩溃。</p>
+</div>
+
+<h3>8.5 XGBoost 参数 (MultiHorizonXGB)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>n_estimators</code></td><td>200</td><td>提升轮数</td></tr>
+  <tr><td><code>max_depth</code></td><td>2</td><td>极浅的树（只有 2 层），221 样本上防过拟合</td></tr>
+  <tr><td><code>learning_rate</code></td><td>0.03</td><td>学习率</td></tr>
+  <tr><td><code>scale_pos_weight</code></td><td>自动</td><td>= 负样本数 / 正样本数，处理类别不平衡</td></tr>
+  <tr><td><code>subsample</code></td><td>0.8</td><td>行采样 80%</td></tr>
+  <tr><td><code>colsample_bytree</code></td><td>0.8</td><td>列采样 80%（每棵树随机用 80% 特征）</td></tr>
+  <tr><td><code>reg_alpha</code></td><td>0.1</td><td>L1 正则化（稀疏化叶权重）</td></tr>
+  <tr><td><code>reg_lambda</code></td><td>1.0</td><td>L2 正则化（平滑叶权重）</td></tr>
+  <tr><td><code>min_child_weight</code></td><td>5</td><td>叶节点最小 Hessian 和，防止过拟合</td></tr>
+  <tr><td><code>SEED_AVG_SEEDS</code></td><td>[42, 123, 456]</td><td>3 个种子平均，降低方差</td></tr>
+</table>
+
+<h4>RankXGB 额外参数</h4>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>eval_metric</code></td><td>"auc"</td><td>优化 AUC 而非 logloss，专注排序能力</td></tr>
+  <tr><td>幂律缩放指数</td><td>0.3</td><td><code>prob_h = prob_12h * (h/12)^0.3</code>，从 12h 概率推算其他时间窗口</td></tr>
+  <tr><td><code>CONST_72H</code></td><td>0.98</td><td>72h 概率硬编码为 0.98（后处理会改为 1.0）</td></tr>
+</table>
+
+<h3>8.6 LightGBM 参数 (MultiHorizonLGBM)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>与 XGBoost 的区别</th></tr>
+  <tr><td><code>max_depth</code></td><td>3</td><td>比 XGB 深一层</td></tr>
+  <tr><td><code>num_leaves</code></td><td>8</td><td>LightGBM 特有：叶子数上限（leaf-wise 生长策略）</td></tr>
+  <tr><td><code>min_child_samples</code></td><td>10</td><td>等价于 XGB 的 min_child_weight</td></tr>
+</table>
+<p>其余参数（n_estimators=200, learning_rate=0.03, subsample=0.8, colsample_bytree=0.8, reg_alpha=0.1, reg_lambda=1.0）与 XGBoost 一致。</p>
+
+<h3>8.7 CatBoost 参数 (MultiHorizonCatBoost)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>iterations</code></td><td>200</td><td>等价于 n_estimators</td></tr>
+  <tr><td><code>depth</code></td><td>3</td><td>树深度</td></tr>
+  <tr><td><code>learning_rate</code></td><td>0.03</td><td>学习率</td></tr>
+  <tr><td><code>l2_leaf_reg</code></td><td>3.0</td><td>L2 正则化（CatBoost 特有命名）</td></tr>
+  <tr><td><code>subsample</code></td><td>0.8</td><td>行采样 80%</td></tr>
+</table>
+
+<h3>8.8 参数模型 (CoxPH / WeibullAFT / LogNormalAFT)</h3>
+<table>
+  <tr><th>模型</th><th><code>penalizer</code></th><th>含义</th></tr>
+  <tr><td>CoxPH</td><td>0.1</td><td>L2 正则化强度，防止系数爆炸</td></tr>
+  <tr><td>WeibullAFT</td><td>0.05</td><td>同上，但更小（参数模型本身约束更强）</td></tr>
+  <tr><td>LogNormalAFT</td><td>0.05</td><td>同上</td></tr>
+</table>
+<div class="card">
+  <p>这三个模型内部还做了手动标准化 <code>(X - mean) / std</code>，因为 lifelines 对特征尺度敏感。sksurv 模型（RSF/EST/GBSA）则通过 train.py 中的 <code>StandardScaler</code> 统一处理。</p>
+</div>
+
+<h3>8.9 特征工程硬编码参数 (features.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>代码位置</th><th>含义</th></tr>
+  <tr><td><code>dist_safe</code> clip 下限</td><td>1.0</td><td>第 31 行</td><td>距离下限 1 米，防止除零</td></tr>
+  <tr><td><code>speed_safe</code> clip 下限</td><td>0.1</td><td>第 37 行</td><td>速度下限 0.1 m/h，防止 ETA 爆炸到无穷大</td></tr>
+  <tr><td><code>dist_close</code> 阈值</td><td>5000</td><td>第 44 行</td><td>5km = 疏散区半径，竞赛定义的关键距离</td></tr>
+  <tr><td>sigmoid <code>center</code></td><td>2600</td><td>第 55 行</td><td>重叠区中心点 2600 米（657m~4545m 的中点附近）</td></tr>
+  <tr><td>sigmoid <code>scale</code></td><td>1000</td><td>第 55 行</td><td>S 型曲线的陡峭度，1000 米内从 0 过渡到 1</td></tr>
+  <tr><td><code>dist_neg_exp</code> 尺度</td><td>5000</td><td>第 68 行</td><td>指数衰减的特征长度，5km 处衰减到 e<sup>-1</sup>&asymp;0.37</td></tr>
+  <tr><td><code>threat_static</code> area clip</td><td>1</td><td>第 59 行</td><td>面积下限 1 公顷，防止 sqrt(0)</td></tr>
+  <tr><td><code>threat_static</code> dist clip</td><td>100</td><td>第 59 行</td><td>距离下限 100 米，防止除零</td></tr>
+  <tr><td>冗余阈值</td><td>|r| &gt; 0.95</td><td>config.py</td><td>相关系数超过 0.95 就删掉其中一个</td></tr>
+</table>
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>sigmoid 的 center=2600 和 scale=1000 不是随便选的。通过分析训练数据发现，657m~4545m 是"烧到"和"没烧到"样本重叠最严重的距离区间。2600 是这个区间的近似中心，1000 控制过渡的平滑度 -- 太陡就变成了硬阈值（信息损失），太缓就没有区分度。</p>
+</div>
+
+<h3>8.10 后处理参数 (monotonic.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td>clip 下限</td><td>0.01</td><td>避免 Brier 惩罚 (0-1)<sup>2</sup>=1.0，裁剪后最坏 (0.01-1)<sup>2</sup>=0.98</td></tr>
+  <tr><td>clip 上限</td><td>0.99</td><td>同理，避免预测 1.0 但实际是 0 时的极端惩罚</td></tr>
+  <tr><td>72h 硬编码</td><td>1.0</td><td>几乎所有火灾 72h 内都到达疏散区，预测 1.0 最小化 Brier</td></tr>
+</table>
+
+<h3>8.11 评分权重 (evaluation.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td>C-Index 权重</td><td>0.3</td><td>排序能力占总分 30%</td></tr>
+  <tr><td>(1-WBrier) 权重</td><td>0.7</td><td>校准精度占总分 70%</td></tr>
+  <tr><td>Brier@24h 权重</td><td>0.3</td><td>24h 窗口占 Brier 的 30%</td></tr>
+  <tr><td>Brier@48h 权重</td><td>0.4</td><td>48h 窗口占 Brier 的 40%（有效样本最多，所以权重最高）</td></tr>
+  <tr><td>Brier@72h 权重</td><td>0.3</td><td>72h 窗口占 Brier 的 30%（但因 prob=1.0 且标签几乎全 1，实际贡献接近零）</td></tr>
+</table>
+
+<h3>8.12 训练流程参数 (train.py)</h3>
+<table>
+  <tr><th>参数</th><th>值</th><th>含义</th></tr>
+  <tr><td><code>FEATURE_LEVEL</code></td><td>"medium"</td><td>使用约 36 个特征的中等特征集</td></tr>
+  <tr><td><code>RETRAIN_SEEDS</code></td><td>[42, 123, 456, 789, 2026]</td><td>5 个种子 x 2 模型(RSF+EST) = 10 个模型</td></tr>
+  <tr><td><code>StandardScaler</code></td><td>无额外参数</td><td>均值归零、方差归一。CV 逐折 fit（防泄露），提交全量 fit</td></tr>
+</table>
+
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>整个项目约 60+ 个可调参数，但实验记录证明：<strong>特征集的选择</strong>（medium vs full vs v96624）比任何单个超参数的调优都重要得多。实验 #6 切换特征集 LB +0.00222，而实验 #7 调 max_features LB 反而 -0.00038。在 221 个样本上，参数调优极易过拟合，<strong>模型多样性</strong>（RSF+EST 组合）才是正道。</p>
+</div>
+
+<!-- ==================== Section 9 ==================== -->
+<h2 id="data-cols">9. 数据列详解</h2>
+
+<p>训练集共 <strong>221 行 x 37 列</strong>，测试集 <strong>95 行 x 35 列</strong>（无 time_to_hit_hours 和 event）。37 列按功能分为 7 组，其中 10 列因冗余被删除，最终保留 24 个原始特征 + 20 个工程特征。</p>
+
+<!-- Interactive Column Explorer -->
+<div class="ce-wrap" id="colExplorer">
+  <div class="ce-tabs" id="ceTabs">
+    <button class="active" data-group="id">标识/目标</button>
+    <button data-group="time">时间覆盖</button>
+    <button data-group="area">面积增长</button>
+    <button data-group="centroid">质心位移</button>
+    <button data-group="dist">社区距离</button>
+    <button data-group="dir">方向对齐</button>
+    <button data-group="meta">时间元数据</button>
+  </div>
+  <div class="ce-body">
+    <div class="ce-list" id="ceList"></div>
+    <div class="ce-scene">
+      <svg id="ceScene" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#e74c3c"/></marker>
+          <marker id="arrowG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#27ae60"/></marker>
+          <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#888"/></marker>
+        </defs>
+        <!-- divider -->
+        <line x1="320" y1="30" x2="320" y2="350" stroke="#555" stroke-dasharray="4,4" opacity="0.5"/>
+        <text x="160" y="22" text-anchor="middle" fill="#e74c3c" font-size="13" font-weight="bold">HIGH RISK</text>
+        <text x="480" y="22" text-anchor="middle" fill="#27ae60" font-size="13" font-weight="bold">LOW RISK</text>
+
+        <!-- ===== id scene ===== -->
+        <g class="ce-scene-group" id="ceG-id">
+          <rect data-col="event_id" class="ce-el" x="40" y="60" width="230" height="40" rx="6" fill="none" stroke="#e74c3c" stroke-width="1.5"/>
+          <text data-col="event_id" class="ce-el" x="155" y="85" text-anchor="middle" fill="#e74c3c" font-size="13">ID: evt_2041</text>
+          <rect data-col="event_id" class="ce-el" x="370" y="60" width="230" height="40" rx="6" fill="none" stroke="#27ae60" stroke-width="1.5"/>
+          <text data-col="event_id" class="ce-el" x="485" y="85" text-anchor="middle" fill="#27ae60" font-size="13">ID: evt_1087</text>
+
+          <rect data-col="event" class="ce-el" x="70" y="130" width="170" height="36" rx="4" fill="#e74c3c" opacity="0.15"/>
+          <text data-col="event" class="ce-el" x="155" y="153" text-anchor="middle" fill="#e74c3c" font-size="13" font-weight="bold">event = 1 (到达社区)</text>
+          <rect data-col="event" class="ce-el" x="400" y="130" width="170" height="36" rx="4" fill="#27ae60" opacity="0.15"/>
+          <text data-col="event" class="ce-el" x="485" y="153" text-anchor="middle" fill="#27ae60" font-size="13" font-weight="bold">event = 0 (未到达)</text>
+
+          <text data-col="time_to_hit_hours" class="ce-el" x="155" y="210" text-anchor="middle" fill="#e74c3c" font-size="22" font-weight="bold">3.3 h</text>
+          <text data-col="time_to_hit_hours" class="ce-el" x="155" y="235" text-anchor="middle" fill="#aaa" font-size="11">到达时间</text>
+          <text data-col="time_to_hit_hours" class="ce-el" x="485" y="210" text-anchor="middle" fill="#27ae60" font-size="22" font-weight="bold">43.8 h</text>
+          <text data-col="time_to_hit_hours" class="ce-el" x="485" y="228" text-anchor="middle" fill="#aaa" font-size="11">删失 (观测结束未到达)</text>
+        </g>
+
+        <!-- ===== time scene ===== -->
+        <g class="ce-scene-group" id="ceG-time">
+          <line x1="40" y1="120" x2="280" y2="120" stroke="#666" stroke-width="1"/>
+          <line x1="360" y1="120" x2="600" y2="120" stroke="#666" stroke-width="1"/>
+          <text x="40" y="115" fill="#aaa" font-size="9">0h</text><text x="270" y="115" fill="#aaa" font-size="9">5h</text>
+          <text x="360" y="115" fill="#aaa" font-size="9">0h</text><text x="590" y="115" fill="#aaa" font-size="9">5h</text>
+
+          <g data-col="num_perimeters_0_5h" class="ce-el">
+            <circle cx="55" cy="120" r="4" fill="#e74c3c"/><circle cx="70" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="85" cy="120" r="4" fill="#e74c3c"/><circle cx="100" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="115" cy="120" r="4" fill="#e74c3c"/><circle cx="130" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="145" cy="120" r="4" fill="#e74c3c"/><circle cx="160" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="175" cy="120" r="4" fill="#e74c3c"/><circle cx="190" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="205" cy="120" r="4" fill="#e74c3c"/><circle cx="220" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="235" cy="120" r="4" fill="#e74c3c"/><circle cx="245" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="255" cy="120" r="4" fill="#e74c3c"/><circle cx="265" cy="120" r="4" fill="#e74c3c"/>
+            <circle cx="275" cy="120" r="4" fill="#e74c3c"/>
+            <text x="160" y="145" text-anchor="middle" fill="#e74c3c" font-size="11">17 次观测</text>
+            <circle cx="375" cy="120" r="4" fill="#27ae60"/>
+            <text x="480" y="145" text-anchor="middle" fill="#27ae60" font-size="11">1 次观测</text>
+          </g>
+
+          <g data-col="dt_first_last_0_5h" class="ce-el">
+            <line x1="55" y1="170" x2="275" y2="170" stroke="#e74c3c" stroke-width="2"/>
+            <line x1="55" y1="165" x2="55" y2="175" stroke="#e74c3c" stroke-width="2"/>
+            <line x1="275" y1="165" x2="275" y2="175" stroke="#e74c3c" stroke-width="2"/>
+            <text x="165" y="190" text-anchor="middle" fill="#e74c3c" font-size="12">3.16 h 跨度</text>
+            <line x1="375" y1="170" x2="377" y2="170" stroke="#27ae60" stroke-width="2"/>
+            <text x="480" y="190" text-anchor="middle" fill="#27ae60" font-size="12">0 h (单次)</text>
+          </g>
+
+          <g data-col="low_temporal_resolution_0_5h" class="ce-el">
+            <rect x="90" y="220" width="130" height="30" rx="4" fill="#e74c3c" opacity="0.12"/>
+            <text x="155" y="240" text-anchor="middle" fill="#e74c3c" font-size="12">0 = 多次观测</text>
+            <rect x="420" y="220" width="130" height="30" rx="4" fill="#27ae60" opacity="0.12"/>
+            <text x="485" y="240" text-anchor="middle" fill="#27ae60" font-size="12">1 = 仅快照</text>
+          </g>
+        </g>
+
+        <!-- ===== area scene ===== -->
+        <g class="ce-scene-group" id="ceG-area">
+          <circle data-col="area_first_ha" class="ce-el" cx="140" cy="160" r="38" fill="#e74c3c" opacity="0.2" stroke="#e74c3c" stroke-width="1.5"/>
+          <text data-col="area_first_ha" class="ce-el" x="140" y="165" text-anchor="middle" fill="#e74c3c" font-size="12">54 ha</text>
+          <circle data-col="area_first_ha" class="ce-el" cx="480" cy="160" r="22" fill="#27ae60" opacity="0.15" stroke="#27ae60" stroke-width="1.5"/>
+          <text data-col="area_first_ha" class="ce-el" x="480" y="165" text-anchor="middle" fill="#27ae60" font-size="12">14 ha</text>
+
+          <circle data-col="area_growth_abs_0_5h" class="ce-el" cx="140" cy="160" r="65" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text data-col="area_growth_abs_0_5h" class="ce-el" x="140" y="100" text-anchor="middle" fill="#e74c3c" font-size="11">+280 ha</text>
+          <text data-col="area_growth_abs_0_5h" class="ce-el" x="480" y="125" text-anchor="middle" fill="#27ae60" font-size="11">+0 ha</text>
+
+          <text data-col="area_growth_rel_0_5h" class="ce-el" x="140" y="250" text-anchor="middle" fill="#e74c3c" font-size="13" font-weight="bold">+520%</text>
+          <text data-col="area_growth_rel_0_5h" class="ce-el" x="480" y="250" text-anchor="middle" fill="#27ae60" font-size="13">0%</text>
+
+          <text data-col="area_growth_rate_ha_per_h" class="ce-el" x="140" y="275" text-anchor="middle" fill="#e74c3c" font-size="11">88.6 ha/h</text>
+          <text data-col="area_growth_rate_ha_per_h" class="ce-el" x="480" y="275" text-anchor="middle" fill="#27ae60" font-size="11">0 ha/h</text>
+
+          <g data-col="radial_growth_m" class="ce-el">
+            <line x1="140" y1="160" x2="205" y2="160" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowR)"/>
+            <text x="175" y="155" text-anchor="middle" fill="#e74c3c" font-size="10">617 m</text>
+            <line x1="480" y1="160" x2="502" y2="160" stroke="#27ae60" stroke-width="1.5"/>
+            <text x="510" y="155" text-anchor="start" fill="#27ae60" font-size="10">r=211m</text>
+          </g>
+
+          <text data-col="radial_growth_rate_m_per_h" class="ce-el" x="140" y="300" text-anchor="middle" fill="#e74c3c" font-size="11">195 m/h</text>
+          <text data-col="radial_growth_rate_m_per_h" class="ce-el" x="480" y="300" text-anchor="middle" fill="#27ae60" font-size="11">0 m/h</text>
+
+          <text data-col="log1p_area_first" class="ce-el" x="140" y="330" text-anchor="middle" fill="#e74c3c" font-size="11">log1p = 4.02</text>
+          <text data-col="log1p_area_first" class="ce-el" x="480" y="330" text-anchor="middle" fill="#27ae60" font-size="11">log1p = 2.71</text>
+        </g>
+
+        <!-- ===== centroid scene ===== -->
+        <g class="ce-scene-group" id="ceG-centroid">
+          <circle cx="120" cy="150" r="25" fill="#e74c3c" opacity="0.15" stroke="#e74c3c"/>
+          <circle cx="480" cy="150" r="20" fill="#27ae60" opacity="0.12" stroke="#27ae60"/>
+
+          <g data-col="spread_bearing_deg" class="ce-el">
+            <path d="M120,150 L120,100" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+            <path d="M120,100 A50,50 0 0,1 155,175" fill="none" stroke="#e74c3c" stroke-width="2"/>
+            <text x="170" y="130" fill="#e74c3c" font-size="12">134 deg</text>
+            <text x="480" y="100" text-anchor="middle" fill="#27ae60" font-size="12">0 deg (无位移)</text>
+          </g>
+
+          <g data-col="spread_bearing_sin" class="ce-el">
+            <text x="120" y="220" text-anchor="middle" fill="#e74c3c" font-size="12">sin = 0.72</text>
+            <text x="480" y="220" text-anchor="middle" fill="#27ae60" font-size="12">sin = 0</text>
+          </g>
+
+          <g data-col="spread_bearing_cos" class="ce-el">
+            <text x="120" y="245" text-anchor="middle" fill="#e74c3c" font-size="12">cos = -0.69</text>
+            <text x="480" y="245" text-anchor="middle" fill="#27ae60" font-size="12">cos = 1.0</text>
+          </g>
+
+          <g data-col="centroid_displacement_m" class="ce-el">
+            <line x1="120" y1="150" x2="200" y2="200" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrowR)"/>
+            <text x="165" y="280" text-anchor="middle" fill="#e74c3c" font-size="12">744 m</text>
+            <text x="480" y="280" text-anchor="middle" fill="#27ae60" font-size="12">0 m</text>
+          </g>
+
+          <g data-col="centroid_speed_m_per_h" class="ce-el">
+            <text x="165" y="310" text-anchor="middle" fill="#e74c3c" font-size="12">235 m/h</text>
+            <text x="480" y="310" text-anchor="middle" fill="#27ae60" font-size="12">0 m/h</text>
+          </g>
+        </g>
+
+        <!-- ===== dist scene ===== -->
+        <g class="ce-scene-group" id="ceG-dist">
+          <circle cx="80" cy="160" r="18" fill="#e74c3c" opacity="0.2" stroke="#e74c3c"/>
+          <text x="80" y="164" text-anchor="middle" fill="#e74c3c" font-size="9">fire</text>
+          <rect x="200" y="145" width="30" height="30" rx="3" fill="none" stroke="#e74c3c" stroke-width="1.5"/>
+          <text x="215" y="164" text-anchor="middle" fill="#e74c3c" font-size="8">CI</text>
+          <circle cx="400" cy="160" r="15" fill="#27ae60" opacity="0.15" stroke="#27ae60"/>
+          <text x="400" y="164" text-anchor="middle" fill="#27ae60" font-size="9">fire</text>
+          <rect x="560" y="145" width="30" height="30" rx="3" fill="none" stroke="#27ae60" stroke-width="1.5"/>
+          <text x="575" y="164" text-anchor="middle" fill="#27ae60" font-size="8">CI</text>
+
+          <g data-col="dist_min_ci_0_5h" class="ce-el">
+            <line x1="98" y1="160" x2="200" y2="160" stroke="#e74c3c" stroke-width="2"/>
+            <text x="150" y="152" text-anchor="middle" fill="#e74c3c" font-size="11">563 m</text>
+            <line x1="415" y1="160" x2="560" y2="160" stroke="#27ae60" stroke-width="2"/>
+            <text x="488" y="152" text-anchor="middle" fill="#27ae60" font-size="11">31 km</text>
+          </g>
+
+          <g data-col="dist_std_ci_0_5h" class="ce-el">
+            <text x="150" y="210" text-anchor="middle" fill="#e74c3c" font-size="11">std = 0</text>
+            <text x="488" y="210" text-anchor="middle" fill="#27ae60" font-size="11">std = 0</text>
+          </g>
+
+          <g data-col="dist_change_ci_0_5h" class="ce-el">
+            <text x="150" y="235" text-anchor="middle" fill="#e74c3c" font-size="11">change = 0</text>
+            <text x="488" y="235" text-anchor="middle" fill="#27ae60" font-size="11">change = 0</text>
+          </g>
+
+          <g data-col="closing_speed_m_per_h" class="ce-el">
+            <text x="150" y="260" text-anchor="middle" fill="#e74c3c" font-size="11">closing = 0 m/h</text>
+            <text x="488" y="260" text-anchor="middle" fill="#27ae60" font-size="11">closing = 0 m/h</text>
+          </g>
+
+          <g data-col="dist_accel_m_per_h2" class="ce-el">
+            <text x="150" y="285" text-anchor="middle" fill="#e74c3c" font-size="11">accel = 0</text>
+            <text x="488" y="285" text-anchor="middle" fill="#27ae60" font-size="11">accel = 0</text>
+          </g>
+
+          <g data-col="dist_fit_r2_0_5h" class="ce-el">
+            <text x="150" y="310" text-anchor="middle" fill="#e74c3c" font-size="11">R2 = 0</text>
+            <text x="488" y="310" text-anchor="middle" fill="#27ae60" font-size="11">R2 = 0</text>
+          </g>
+
+          <g data-col="dist_slope_ci_0_5h" class="ce-el">
+            <text x="150" y="335" text-anchor="middle" fill="#888" font-size="10">[removed] slope</text>
+            <text x="488" y="335" text-anchor="middle" fill="#888" font-size="10">[removed] slope</text>
+          </g>
+          <g data-col="closing_speed_abs_m_per_h" class="ce-el">
+            <text x="150" y="350" text-anchor="middle" fill="#888" font-size="9">[removed] |closing|</text>
+          </g>
+          <g data-col="projected_advance_m" class="ce-el">
+            <text x="488" y="350" text-anchor="middle" fill="#888" font-size="9">[removed] projected</text>
+          </g>
+        </g>
+
+        <!-- ===== dir scene ===== -->
+        <g class="ce-scene-group" id="ceG-dir">
+          <circle cx="120" cy="160" r="20" fill="#e74c3c" opacity="0.15" stroke="#e74c3c"/>
+          <rect x="220" y="145" width="25" height="25" rx="3" fill="none" stroke="#e74c3c" stroke-width="1.5"/>
+          <circle cx="460" cy="160" r="18" fill="#27ae60" opacity="0.12" stroke="#27ae60"/>
+          <rect x="550" y="145" width="25" height="25" rx="3" fill="none" stroke="#27ae60" stroke-width="1.5"/>
+
+          <g data-col="alignment_abs" class="ce-el">
+            <path d="M80,260 A60,60 0 0,1 160,260" fill="none" stroke="#444" stroke-width="3"/>
+            <line x1="120" y1="260" x2="148" y2="230" stroke="#e74c3c" stroke-width="2.5"/>
+            <text x="120" y="290" text-anchor="middle" fill="#e74c3c" font-size="12">0.64</text>
+            <path d="M420,260 A60,60 0 0,1 500,260" fill="none" stroke="#444" stroke-width="3"/>
+            <line x1="460" y1="260" x2="460" y2="200" stroke="#27ae60" stroke-width="2.5"/>
+            <text x="460" y="290" text-anchor="middle" fill="#27ae60" font-size="12">0</text>
+          </g>
+
+          <g data-col="cross_track_component" class="ce-el">
+            <line x1="120" y1="160" x2="120" y2="120" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowR)"/>
+            <text x="135" y="115" fill="#e74c3c" font-size="11">181 m/h</text>
+            <text x="460" y="120" text-anchor="middle" fill="#27ae60" font-size="11">0 m/h</text>
+          </g>
+
+          <g data-col="alignment_cos" class="ce-el">
+            <text x="120" y="330" text-anchor="middle" fill="#888" font-size="10">[removed] cos sign flip</text>
+          </g>
+          <g data-col="along_track_speed" class="ce-el">
+            <text x="460" y="330" text-anchor="middle" fill="#888" font-size="10">[removed] r~0.96</text>
+          </g>
+        </g>
+
+        <!-- ===== meta scene ===== -->
+        <g class="ce-scene-group" id="ceG-meta">
+          <g data-col="event_start_hour" class="ce-el">
+            <circle cx="120" cy="130" r="40" fill="none" stroke="#e74c3c" stroke-width="1.5"/>
+            <line x1="120" y1="130" x2="120" y2="100" stroke="#e74c3c" stroke-width="2"/>
+            <line x1="120" y1="130" x2="140" y2="140" stroke="#e74c3c" stroke-width="1.5"/>
+            <text x="120" y="185" text-anchor="middle" fill="#e74c3c" font-size="13">14:00</text>
+            <circle cx="480" cy="130" r="40" fill="none" stroke="#27ae60" stroke-width="1.5"/>
+            <line x1="480" y1="130" x2="480" y2="100" stroke="#27ae60" stroke-width="2"/>
+            <line x1="480" y1="130" x2="460" y2="120" stroke="#27ae60" stroke-width="1.5"/>
+            <text x="480" y="185" text-anchor="middle" fill="#27ae60" font-size="13">10:00</text>
+          </g>
+
+          <g data-col="event_start_dayofweek" class="ce-el">
+            <text x="120" y="230" text-anchor="middle" fill="#e74c3c" font-size="14" font-weight="bold">Wed</text>
+            <text x="120" y="248" text-anchor="middle" fill="#aaa" font-size="10">星期三</text>
+            <text x="480" y="230" text-anchor="middle" fill="#27ae60" font-size="14" font-weight="bold">Mon</text>
+            <text x="480" y="248" text-anchor="middle" fill="#aaa" font-size="10">星期一</text>
+          </g>
+
+          <g data-col="event_start_month" class="ce-el">
+            <rect x="80" y="270" width="80" height="35" rx="4" fill="#e74c3c" opacity="0.12"/>
+            <text x="120" y="293" text-anchor="middle" fill="#e74c3c" font-size="13">2月</text>
+            <rect x="440" y="270" width="80" height="35" rx="4" fill="#27ae60" opacity="0.12"/>
+            <text x="480" y="293" text-anchor="middle" fill="#27ae60" font-size="13">12月</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="ce-info" id="ceInfo">
+      <div class="ce-info-hint">选择一个列名<br/>查看详细信息</div>
+    </div>
+  </div>
+</div>
+<p class="svg-caption">交互式列探索器 -- 点击 Tab 和列名查看每列在野火场景中的物理含义</p>
+
+<h3>9.0 场景总览</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="520" fill="#0f172a" rx="8"/>
+  <defs>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#fb923c"/></marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#38bdf8"/></marker>
+    <marker id="arrowGreen0" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4ade80"/></marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Scene Overview: High-Risk vs Low-Risk Wildfire</text>
+
+  <!-- ===== 上半: 高风险样本 ===== -->
+  <rect x="10" y="38" width="700" height="210" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="180" height="22" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="56" fill="#f87171" font-size="12" font-weight="700">HIGH RISK -- event_id 80550714</text>
+  <text x="380" y="56" fill="#94a3b8" font-size="10">event=1 | time_to_hit=3.3h | 17 observations | prob_12h ~ 0.85</text>
+
+  <!-- 高风险: 火灾 (大火, 近距离) -->
+  <ellipse cx="140" cy="155" rx="60" ry="42" fill="#ef4444" opacity="0.3" stroke="#ef4444" stroke-width="1.5"/>
+  <ellipse cx="140" cy="155" rx="35" ry="25" fill="#f97316" opacity="0.4"/>
+  <circle cx="140" cy="155" r="3" fill="#fbbf24" stroke="#fff" stroke-width="1"/>
+  <text x="140" y="210" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="600">area = 334 ha</text>
+  <text x="140" y="223" text-anchor="middle" fill="#94a3b8" font-size="9">(54 + 280 growth)</text>
+
+  <!-- 高风险: 扩散方向 (alignment=0.64, 朝社区偏) -->
+  <line x1="175" y1="150" x2="240" y2="130" stroke="#fb923c" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <text x="225" y="120" fill="#fb923c" font-size="9">spread_bearing=134</text>
+
+  <!-- 高风险: 社区 -->
+  <rect x="310" y="140" width="16" height="22" fill="#64748b" rx="2"/>
+  <rect x="330" y="148" width="12" height="14" fill="#64748b" rx="2"/>
+  <rect x="300" y="152" width="10" height="10" fill="#475569" rx="1"/>
+  <text x="320" y="180" text-anchor="middle" fill="#e2e8f0" font-size="10">Community</text>
+
+  <!-- 高风险: 5km 疏散区 -->
+  <circle cx="320" cy="155" r="70" fill="none" stroke="#f87171" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.5"/>
+  <text x="320" y="82" text-anchor="middle" fill="#f87171" font-size="9" opacity="0.7">5km zone</text>
+
+  <!-- 高风险: 距离线 (563m -- 极近, 在疏散区内!) -->
+  <line x1="200" y1="155" x2="298" y2="155" stroke="#38bdf8" stroke-width="2"/>
+  <circle cx="200" cy="155" r="3" fill="#38bdf8"/>
+  <circle cx="298" cy="155" r="3" fill="#38bdf8"/>
+  <text x="249" y="148" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">dist = 563m</text>
+  <text x="249" y="168" text-anchor="middle" fill="#f87171" font-size="9">Inside 5km zone!</text>
+
+  <!-- 高风险: 数据面板 -->
+  <rect x="400" y="70" width="295" height="165" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="415" y="90" fill="#e2e8f0" font-size="11" font-weight="600">Key Column Values:</text>
+  <text x="415" y="108" fill="#38bdf8" font-size="10">dist_min_ci_0_5h = 563 m</text>
+  <text x="610" y="108" fill="#4ade80" font-size="9">(inside zone)</text>
+  <text x="415" y="124" fill="#4ade80" font-size="10">area_first_ha = 54 ha</text>
+  <text x="415" y="140" fill="#fb923c" font-size="10">area_growth_abs = 280 ha</text>
+  <text x="610" y="140" fill="#fb923c" font-size="9">(+519%)</text>
+  <text x="415" y="156" fill="#a78bfa" font-size="10">closing_speed = 0 m/h</text>
+  <text x="610" y="156" fill="#94a3b8" font-size="9">(expanding)</text>
+  <text x="415" y="172" fill="#fbbf24" font-size="10">alignment_cos = 0.64</text>
+  <text x="610" y="172" fill="#fbbf24" font-size="9">(toward comm.)</text>
+  <text x="415" y="188" fill="#e2e8f0" font-size="10">num_perimeters = 17</text>
+  <text x="610" y="188" fill="#4ade80" font-size="9">(rich dynamics)</text>
+  <text x="415" y="204" fill="#e2e8f0" font-size="10">radial_growth = 617 m</text>
+  <text x="415" y="220" fill="#e2e8f0" font-size="10">spread_bearing = 134 deg (SE)</text>
+
+  <!-- ===== 下半: 低风险样本 ===== -->
+  <rect x="10" y="260" width="700" height="210" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="262" width="180" height="22" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="278" fill="#4ade80" font-size="12" font-weight="700">LOW RISK -- event_id 72762907</text>
+  <text x="380" y="278" fill="#94a3b8" font-size="10">event=0 | censored at 43.8h | 1 observation | prob_12h ~ 0.02</text>
+
+  <!-- 低风险: 火灾 (小火, 远距离) -->
+  <ellipse cx="80" cy="380" rx="18" ry="14" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2"/>
+  <circle cx="80" cy="380" r="2" fill="#fbbf24" stroke="#fff" stroke-width="1"/>
+  <text x="80" y="405" text-anchor="middle" fill="#fb923c" font-size="10">area = 14 ha</text>
+  <text x="80" y="418" text-anchor="middle" fill="#94a3b8" font-size="9">(no growth)</text>
+
+  <!-- 低风险: 社区 (很远) -->
+  <rect x="620" y="370" width="14" height="18" fill="#64748b" rx="2"/>
+  <rect x="638" y="376" width="10" height="12" fill="#64748b" rx="2"/>
+  <text x="638" y="400" text-anchor="middle" fill="#e2e8f0" font-size="10">Community</text>
+
+  <!-- 低风险: 5km 疏散区 (远处小圈) -->
+  <circle cx="635" cy="380" r="12" fill="none" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+  <text x="635" y="362" text-anchor="middle" fill="#f87171" font-size="8" opacity="0.5">5km</text>
+
+  <!-- 低风险: 距离线 (31km -- 极远) -->
+  <line x1="98" y1="380" x2="618" y2="380" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.6"/>
+  <circle cx="98" cy="380" r="3" fill="#38bdf8"/>
+  <circle cx="618" cy="380" r="3" fill="#38bdf8"/>
+  <text x="358" y="373" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">dist = 31,059 m (31 km)</text>
+  <text x="358" y="393" text-anchor="middle" fill="#4ade80" font-size="9">Far outside 5km zone -- safe</text>
+
+  <!-- 低风险: 数据面板 -->
+  <rect x="400" y="290" width="295" height="155" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="415" y="310" fill="#e2e8f0" font-size="11" font-weight="600">Key Column Values:</text>
+  <text x="415" y="328" fill="#38bdf8" font-size="10">dist_min_ci_0_5h = 31,059 m</text>
+  <text x="610" y="328" fill="#94a3b8" font-size="9">(6x zone)</text>
+  <text x="415" y="344" fill="#4ade80" font-size="10">area_first_ha = 14 ha</text>
+  <text x="610" y="344" fill="#94a3b8" font-size="9">(small)</text>
+  <text x="415" y="360" fill="#fb923c" font-size="10">area_growth_abs = 0 ha</text>
+  <text x="610" y="360" fill="#94a3b8" font-size="9">(no change)</text>
+  <text x="415" y="376" fill="#a78bfa" font-size="10">closing_speed = 0 m/h</text>
+  <text x="415" y="392" fill="#fbbf24" font-size="10">alignment_cos = 0</text>
+  <text x="610" y="392" fill="#94a3b8" font-size="9">(no direction)</text>
+  <text x="415" y="408" fill="#e2e8f0" font-size="10">num_perimeters = 1</text>
+  <text x="610" y="408" fill="#f87171" font-size="9">(single snapshot)</text>
+  <text x="415" y="424" fill="#e2e8f0" font-size="10">all dynamics = 0</text>
+  <text x="610" y="424" fill="#94a3b8" font-size="9">(no info)</text>
+
+  <!-- 底部对比总结 -->
+  <rect x="60" y="480" width="600" height="28" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="360" y="499" text-anchor="middle" fill="#94a3b8" font-size="11">Key difference: distance (563m vs 31km) + fire size (334ha vs 14ha) + observation richness (17 vs 1)</text>
+</svg>
+<p class="svg-caption">Fig 1. 场景鸟瞰图对比 -- 高风险样本（近距离大火）vs 低风险样本（远距离小火）</p>
+
+<h3>数据整体特点</h3>
+<div class="card">
+  <p><strong>极小样本量：</strong>221 个训练样本，深度学习不适用，树模型是唯一选择。</p>
+  <p><strong>严重零膨胀：</strong>34 个特征中 25 个的零值占比超过 70%。原因：72.4% 的样本只有一次观测，算不出增长/速度/方向。</p>
+  <p><strong>类别不平衡：</strong>event=1（烧到）仅 69 个（31.2%），event=0（未烧到/删失）152 个（68.8%）。</p>
+  <p><strong>距离极度右偏：</strong>最近 307m，最远 757km，中位数 31.8km，但疏散区阈值仅 5km。</p>
+  <p><strong>无缺失值：</strong>所有列完整，但偏度高达 10-12（正常 &lt; 2）。</p>
+</div>
+
+<h3>9.1 标识和目标列（3 列）</h3>
+<table>
+  <tr><th>#</th><th>列名</th><th>类型</th><th>含义</th><th>作用</th></tr>
+  <tr><td>0</td><td><code>event_id</code></td><td>int</td><td>火灾事件的唯一编号</td><td>仅用于标识，不参与建模</td></tr>
+  <tr><td>35</td><td><code>time_to_hit_hours</code></td><td>float</td><td>火灾到达疏散区的时间（小时）</td><td>生存分析的"时间"变量。event=1 时是实际到达时间，event=0 时是最后一次观测时间</td></tr>
+  <tr><td>36</td><td><code>event</code></td><td>int (0/1)</td><td>火灾是否烧到了 5km 疏散区</td><td>生存分析的"事件"变量。0=右删失（观测中断或没烧到），1=烧到了</td></tr>
+</table>
+<div class="card">
+  <p><strong>关键统计：</strong>event=1 的中位到达时间仅 <strong>3.5 小时</strong>（烧到的火大多很快就到了），event=0 的中位观测时间 <strong>61.2 小时</strong>（大部分删失发生在观测末期）。72h 内烧到的比例 = 69/69 = <strong>100%</strong>，所以 prob_72h 硬编码为 1.0。</p>
+</div>
+
+<h3>9.2 时间覆盖（3 列）-- 前 5 小时观测了多少次</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="420" fill="#0f172a" rx="8"/>
+
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Temporal Coverage: Rich Observation vs Single Snapshot</text>
+
+  <!-- ===== 上半: 高风险 17次观测 ===== -->
+  <rect x="10" y="38" width="700" height="170" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="180" height="20" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="55" fill="#f87171" font-size="11" font-weight="700">HIGH RISK -- 17 observations</text>
+  <text x="350" y="55" fill="#94a3b8" font-size="10">event_id 80550714 | dt_first_last = 3.16h | low_temporal = 0</text>
+
+  <!-- 时间轴 -->
+  <line x1="50" y1="120" x2="680" y2="120" stroke="#334155" stroke-width="2"/>
+  <text x="50" y="140" fill="#94a3b8" font-size="10">0h</text>
+  <text x="176" y="140" fill="#94a3b8" font-size="10">1h</text>
+  <text x="302" y="140" fill="#94a3b8" font-size="10">2h</text>
+  <text x="428" y="140" fill="#94a3b8" font-size="10">3h</text>
+  <text x="554" y="140" fill="#94a3b8" font-size="10">4h</text>
+  <text x="680" y="140" fill="#94a3b8" font-size="10">5h</text>
+  <line x1="50" y1="117" x2="50" y2="123" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="176" y1="117" x2="176" y2="123" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="302" y1="117" x2="302" y2="123" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="428" y1="117" x2="428" y2="123" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="554" y1="117" x2="554" y2="123" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="680" y1="117" x2="680" y2="123" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- 17个观测点 (密集分布在0~3.16h) -->
+  <circle cx="55" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="85" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="110" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="140" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="165" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="195" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="220" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="248" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="275" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="300" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="325" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="348" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="370" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="390" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="410" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="430" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+  <circle cx="448" cy="95" r="5" fill="#4ade80" opacity="0.8"/>
+
+  <!-- 火灾轮廓逐渐变大 -->
+  <ellipse cx="55" cy="95" rx="8" ry="6" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="248" cy="95" rx="14" ry="10" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="448" cy="95" rx="22" ry="15" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.5"/>
+
+  <!-- dt_first_last 标注 -->
+  <line x1="55" y1="70" x2="55" y2="78" stroke="#38bdf8" stroke-width="1"/>
+  <line x1="448" y1="70" x2="448" y2="78" stroke="#38bdf8" stroke-width="1"/>
+  <line x1="55" y1="73" x2="448" y2="73" stroke="#38bdf8" stroke-width="2"/>
+  <text x="252" y="68" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">dt_first_last_0_5h = 3.16 h</text>
+
+  <!-- 数据面板 -->
+  <rect x="480" y="60" width="210" height="130" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="495" y="78" fill="#e2e8f0" font-size="10" font-weight="600">Columns available:</text>
+  <text x="495" y="94" fill="#4ade80" font-size="10">num_perimeters = 17</text>
+  <text x="495" y="110" fill="#38bdf8" font-size="10">dt_first_last = 3.16h</text>
+  <text x="495" y="126" fill="#e2e8f0" font-size="10">low_temporal = 0</text>
+  <text x="495" y="146" fill="#94a3b8" font-size="9">-- All dynamic features valid:</text>
+  <text x="495" y="160" fill="#fb923c" font-size="9">growth, speed, bearing,</text>
+  <text x="495" y="174" fill="#fb923c" font-size="9">closing_speed, alignment...</text>
+
+  <!-- ===== 下半: 低风险 1次观测 ===== -->
+  <rect x="10" y="220" width="700" height="170" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="222" width="180" height="20" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="237" fill="#4ade80" font-size="11" font-weight="700">LOW RISK -- 1 observation</text>
+  <text x="350" y="237" fill="#94a3b8" font-size="10">event_id 72762907 | dt_first_last = 0h | low_temporal = 1</text>
+
+  <!-- 时间轴 -->
+  <line x1="50" y1="310" x2="680" y2="310" stroke="#334155" stroke-width="2"/>
+  <text x="50" y="330" fill="#94a3b8" font-size="10">0h</text>
+  <text x="176" y="330" fill="#94a3b8" font-size="10">1h</text>
+  <text x="302" y="330" fill="#94a3b8" font-size="10">2h</text>
+  <text x="428" y="330" fill="#94a3b8" font-size="10">3h</text>
+  <text x="554" y="330" fill="#94a3b8" font-size="10">4h</text>
+  <text x="680" y="330" fill="#94a3b8" font-size="10">5h</text>
+  <line x1="50" y1="307" x2="50" y2="313" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="176" y1="307" x2="176" y2="313" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="302" y1="307" x2="302" y2="313" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="428" y1="307" x2="428" y2="313" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="554" y1="307" x2="554" y2="313" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="680" y1="307" x2="680" y2="313" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- 单个观测点 -->
+  <circle cx="200" cy="280" r="7" fill="#f87171" opacity="0.8"/>
+  <ellipse cx="200" cy="280" rx="12" ry="9" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.4"/>
+  <text x="200" y="270" text-anchor="middle" fill="#f87171" font-size="10">Only snapshot</text>
+
+  <!-- 空白区域标注 -->
+  <rect x="250" y="265" width="380" height="30" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
+  <text x="440" y="284" text-anchor="middle" fill="#94a3b8" font-size="10" opacity="0.7">No more observations -- cannot compute any dynamics</text>
+
+  <!-- 数据面板 -->
+  <rect x="480" y="250" width="210" height="130" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="495" y="268" fill="#e2e8f0" font-size="10" font-weight="600">Columns available:</text>
+  <text x="495" y="284" fill="#f87171" font-size="10">num_perimeters = 1</text>
+  <text x="495" y="300" fill="#38bdf8" font-size="10">dt_first_last = 0</text>
+  <text x="495" y="316" fill="#e2e8f0" font-size="10">low_temporal = 1</text>
+  <text x="495" y="336" fill="#94a3b8" font-size="9">-- All dynamics forced to 0:</text>
+  <text x="495" y="350" fill="#94a3b8" font-size="9">growth=0, speed=0, bearing=0,</text>
+  <text x="495" y="364" fill="#94a3b8" font-size="9">closing=0, alignment=0</text>
+
+  <!-- 底部对比 -->
+  <rect x="60" y="398" width="600" height="14" fill="none"/>
+  <text x="360" y="410" text-anchor="middle" fill="#94a3b8" font-size="11">72.4% of training samples are like Case B -- model must distinguish "no movement" from "no data"</text>
+</svg>
+<p class="svg-caption">Fig 2. 时间覆盖对比 -- 17次密集观测（动态特征丰富）vs 单次快照（所有动态为零）</p>
+
+<table>
+  <tr><th>#</th><th>列名</th><th>零值占比</th><th>含义</th><th>作用</th></tr>
+  <tr><td>1</td><td><code>num_perimeters_0_5h</code></td><td>0%</td><td>前 5 小时内拍到的火灾边界快照数量</td><td>值越大说明观测越密集。=1 时所有动态特征都是零</td></tr>
+  <tr><td>2</td><td><code>dt_first_last_0_5h</code></td><td>72.4%</td><td>第一次和最后一次观测之间的时间跨度（小时）</td><td>=0 表示只有一次观测。跨度越长，动态特征越可靠</td></tr>
+  <tr><td>3</td><td><code>low_temporal_resolution_0_5h</code></td><td>--</td><td>是否只有一次观测（二值标记）</td><td>=1 表示只拍到一张快照，所有增长/速度/方向特征不可用。与 event 的 |r|=0.379</td></tr>
+</table>
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>这三列是"元信息" -- 不描述火灾本身，而是描述<em>我们对火灾了解多少</em>。72.4% 的样本只有一次观测，意味着大部分样本的动态特征全是零。模型必须学会区分"速度=0 是因为火没动"和"速度=0 是因为我们只看了一眼"。</p>
+</div>
+
+<h3>9.3 火灾面积和增长（10 列）-- 火有多大、长多快</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="480" fill="#0f172a" rx="8"/>
+
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Fire Area Growth: Rapidly Expanding vs Static</text>
+
+  <!-- ===== 上半: 高风险 -- 快速扩张 ===== -->
+  <rect x="10" y="38" width="700" height="200" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="260" height="20" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="55" fill="#f87171" font-size="11" font-weight="700">HIGH RISK -- area grew 519% in 3.16 hours</text>
+
+  <!-- 初始火灾 t=0 -->
+  <ellipse cx="120" cy="145" rx="28" ry="22" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <circle cx="120" cy="145" r="3" fill="#fbbf24"/>
+  <text x="120" y="180" text-anchor="middle" fill="#94a3b8" font-size="10">t = 0</text>
+  <text x="120" y="193" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="600">54 ha</text>
+
+  <!-- 箭头 -->
+  <defs>
+    <marker id="arrowG3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4ade80"/></marker>
+  </defs>
+  <line x1="155" y1="145" x2="185" y2="145" stroke="#4ade80" stroke-width="2" marker-end="url(#arrowG3)"/>
+
+  <!-- 增长后火灾 t=5h -->
+  <ellipse cx="280" cy="145" rx="70" ry="55" fill="#ef4444" opacity="0.25" stroke="#ef4444" stroke-width="1.5"/>
+  <ellipse cx="280" cy="145" rx="28" ry="22" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>
+  <circle cx="280" cy="145" r="3" fill="#fbbf24"/>
+  <text x="280" y="215" text-anchor="middle" fill="#94a3b8" font-size="10">t = 5h</text>
+  <text x="280" y="228" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="600">334 ha</text>
+
+  <!-- 增长量标注 -->
+  <line x1="210" y1="85" x2="210" y2="78" stroke="#fb923c" stroke-width="1"/>
+  <line x1="350" y1="85" x2="350" y2="78" stroke="#fb923c" stroke-width="1"/>
+  <line x1="210" y1="80" x2="350" y2="80" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="280" y="75" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="600">area_growth_abs = +280 ha</text>
+
+  <!-- 等效半径 -->
+  <line x1="280" y1="145" x2="350" y2="145" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="320" y="138" fill="#38bdf8" font-size="9">r2 = 1033m</text>
+  <line x1="280" y1="155" x2="308" y2="155" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="300" y="165" fill="#38bdf8" font-size="8" opacity="0.7">r1 = 415m</text>
+
+  <!-- 数据面板 -->
+  <rect x="400" y="65" width="295" height="160" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="415" y="83" fill="#e2e8f0" font-size="10" font-weight="600">Area &amp; Growth Columns:</text>
+  <text x="415" y="100" fill="#4ade80" font-size="10">area_first_ha = 54</text>
+  <text x="620" y="100" fill="#94a3b8" font-size="9">(medium fire)</text>
+  <text x="415" y="116" fill="#fb923c" font-size="10">area_growth_abs_0_5h = 280</text>
+  <text x="620" y="116" fill="#fb923c" font-size="9">(massive)</text>
+  <text x="415" y="132" fill="#a78bfa" font-size="10">area_growth_rel_0_5h = 5.20</text>
+  <text x="620" y="132" fill="#a78bfa" font-size="9">(+520%)</text>
+  <text x="415" y="148" fill="#e2e8f0" font-size="10">area_growth_rate = 88.6 ha/h</text>
+  <text x="415" y="164" fill="#38bdf8" font-size="10">radial_growth_m = 617</text>
+  <text x="620" y="164" fill="#38bdf8" font-size="9">(617m outward)</text>
+  <text x="415" y="180" fill="#e2e8f0" font-size="10">radial_growth_rate = 195 m/h</text>
+  <text x="415" y="196" fill="#e2e8f0" font-size="10">log1p_area_first = 4.02</text>
+  <text x="415" y="212" fill="#94a3b8" font-size="9">r = sqrt(area_ha * 10000 / pi) meters</text>
+
+  <!-- ===== 下半: 低风险 -- 无增长 ===== -->
+  <rect x="10" y="248" width="700" height="200" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="250" width="260" height="20" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="265" fill="#4ade80" font-size="11" font-weight="700">LOW RISK -- no growth observed (single snapshot)</text>
+
+  <!-- 火灾 (只有一个状态) -->
+  <ellipse cx="200" cy="360" rx="18" ry="14" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="200" cy="360" r="3" fill="#fbbf24"/>
+  <text x="200" y="388" text-anchor="middle" fill="#94a3b8" font-size="10">t = 0 (only snapshot)</text>
+  <text x="200" y="401" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="600">14 ha</text>
+
+  <!-- 等效半径 -->
+  <line x1="200" y1="360" x2="218" y2="360" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="225" y="357" fill="#38bdf8" font-size="9">r = 211m</text>
+
+  <!-- 问号区域 -->
+  <text x="300" y="350" fill="#94a3b8" font-size="24" opacity="0.3">?</text>
+  <text x="300" y="375" fill="#94a3b8" font-size="10" opacity="0.5">No t=5h data</text>
+
+  <!-- 数据面板 -->
+  <rect x="400" y="275" width="295" height="160" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="415" y="293" fill="#e2e8f0" font-size="10" font-weight="600">Area &amp; Growth Columns:</text>
+  <text x="415" y="310" fill="#4ade80" font-size="10">area_first_ha = 14</text>
+  <text x="620" y="310" fill="#94a3b8" font-size="9">(small fire)</text>
+  <text x="415" y="326" fill="#94a3b8" font-size="10">area_growth_abs_0_5h = 0</text>
+  <text x="620" y="326" fill="#94a3b8" font-size="9">(no data)</text>
+  <text x="415" y="342" fill="#94a3b8" font-size="10">area_growth_rel_0_5h = 0</text>
+  <text x="415" y="358" fill="#94a3b8" font-size="10">area_growth_rate = 0</text>
+  <text x="415" y="374" fill="#94a3b8" font-size="10">radial_growth_m = 0</text>
+  <text x="415" y="390" fill="#94a3b8" font-size="10">radial_growth_rate = 0</text>
+  <text x="415" y="406" fill="#e2e8f0" font-size="10">log1p_area_first = 2.71</text>
+  <text x="415" y="425" fill="#f87171" font-size="9">All growth columns = 0 (88.7% of samples)</text>
+
+  <!-- 底部对比 -->
+  <text x="360" y="465" text-anchor="middle" fill="#94a3b8" font-size="11">Key: area_first is always available, but growth columns are zero for 88.7% of samples (single observation)</text>
+</svg>
+<p class="svg-caption">Fig 3. 面积增长对比 -- 快速扩张的大火（+280ha）vs 无增长的小火（单次快照）</p>
+
+<table>
+  <tr><th>#</th><th>列名</th><th>零值占比</th><th>含义</th><th>作用</th></tr>
+  <tr><td>4</td><td><code>area_first_ha</code></td><td>0%</td><td>第一次观测时的火灾面积（公顷）</td><td>初始火灾规模。大火更可能烧到远处</td></tr>
+  <tr><td>5</td><td><code>area_growth_abs_0_5h</code></td><td>88.7%</td><td>5 小时内面积绝对增长（公顷）</td><td>火扩大了多少。零=没观测到增长</td></tr>
+  <tr><td>6</td><td><code>area_growth_rel_0_5h</code></td><td>88.7%</td><td>面积相对增长率 = 增长 / 初始面积</td><td>小火长 10 公顷 vs 大火长 10 公顷，意义不同</td></tr>
+  <tr><td>7</td><td><code>area_growth_rate_ha_per_h</code></td><td>88.7%</td><td>面积增长速度（公顷/小时）</td><td>单位时间的扩张速率</td></tr>
+  <tr><td>8</td><td><code>log1p_area_first</code></td><td>0%</td><td>log(1 + 初始面积)</td><td>压缩面积的长尾分布，让树模型更容易分裂</td></tr>
+  <tr><td>9</td><td><code>log1p_growth</code></td><td>89.1%</td><td>log(1 + 绝对增长)</td><td>压缩增长的长尾分布。与 area_growth_abs 高度相关，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>10</td><td><code>log_area_ratio_0_5h</code></td><td>88.7%</td><td>log(末面积 / 初面积)</td><td>对数尺度的相对增长。与 area_growth_rel 高度相关，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>11</td><td><code>relative_growth_0_5h</code></td><td>88.7%</td><td>与 area_growth_rel_0_5h 完全相同</td><td>r=1.0，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>12</td><td><code>radial_growth_m</code></td><td>88.7%</td><td>等效半径增长（米）</td><td>把面积增长换算成"火往外推了多少米"</td></tr>
+  <tr><td>13</td><td><code>radial_growth_rate_m_per_h</code></td><td>88.7%</td><td>等效半径增长速度（米/小时）</td><td>火的径向扩张速率</td></tr>
+</table>
+
+<h3>9.4 质心运动学（5 列）-- 火的中心在往哪走</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="500" fill="#0f172a" rx="8"/>
+  <defs>
+    <marker id="arrowY4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#fbbf24"/></marker>
+  </defs>
+
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Centroid Motion: Active Displacement vs Stationary</text>
+
+  <!-- ===== 上半: 高风险 -- 质心大幅位移 ===== -->
+  <rect x="10" y="38" width="700" height="210" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="300" height="20" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="55" fill="#f87171" font-size="11" font-weight="700">HIGH RISK -- centroid moved 744m in 3.16 hours</text>
+
+  <!-- 初始轮廓 -->
+  <ellipse cx="120" cy="155" rx="30" ry="22" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.4"/>
+  <circle cx="120" cy="155" r="4" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
+  <text x="100" y="185" fill="#38bdf8" font-size="10">C0 (t=0)</text>
+
+  <!-- 末态轮廓 -->
+  <ellipse cx="250" cy="130" rx="50" ry="38" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="250" cy="130" r="4" fill="#4ade80" stroke="#fff" stroke-width="1.5"/>
+  <text x="270" y="122" fill="#4ade80" font-size="10">C1 (t=5h)</text>
+
+  <!-- 位移向量 -->
+  <line x1="124" y1="153" x2="244" y2="132" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrowY4)"/>
+  <text x="190" y="155" fill="#fbbf24" font-size="10" font-weight="600">744m displacement</text>
+
+  <!-- 方向角 -->
+  <line x1="124" y1="153" x2="200" y2="153" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+  <path d="M155 153 A30 30 0 0 0 150 140" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="165" y="143" fill="#a78bfa" font-size="10">134 deg</text>
+
+  <!-- sin/cos 编码示意 (小圆) -->
+  <circle cx="180" cy="210" r="25" fill="none" stroke="#334155" stroke-width="1"/>
+  <line x1="180" y1="185" x2="180" y2="235" stroke="#334155" stroke-width="0.5" opacity="0.4"/>
+  <line x1="155" y1="210" x2="205" y2="210" stroke="#334155" stroke-width="0.5" opacity="0.4"/>
+  <line x1="180" y1="210" x2="198" y2="193" stroke="#fbbf24" stroke-width="1.5"/>
+  <line x1="198" y1="210" x2="198" y2="193" stroke="#4ade80" stroke-width="1.5"/>
+  <line x1="180" y1="210" x2="198" y2="210" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="202" y="200" fill="#4ade80" font-size="8">sin=0.72</text>
+  <text x="185" y="222" fill="#38bdf8" font-size="8">cos=-0.69</text>
+
+  <!-- 数据面板 -->
+  <rect x="380" y="60" width="315" height="175" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="395" y="78" fill="#e2e8f0" font-size="10" font-weight="600">Centroid Motion Columns:</text>
+  <text x="395" y="96" fill="#fbbf24" font-size="10">centroid_displacement_m = 744</text>
+  <text x="660" y="96" fill="#f87171" font-size="9">(removed)</text>
+  <text x="395" y="112" fill="#e2e8f0" font-size="10">centroid_speed_m_per_h = 235</text>
+  <text x="660" y="112" fill="#f87171" font-size="9">(removed)</text>
+  <text x="395" y="132" fill="#a78bfa" font-size="10">spread_bearing_deg = 134</text>
+  <text x="660" y="132" fill="#4ade80" font-size="9">(kept)</text>
+  <text x="395" y="148" fill="#4ade80" font-size="10">spread_bearing_sin = 0.72</text>
+  <text x="660" y="148" fill="#4ade80" font-size="9">(kept)</text>
+  <text x="395" y="164" fill="#38bdf8" font-size="10">spread_bearing_cos = -0.69</text>
+  <text x="660" y="164" fill="#4ade80" font-size="9">(kept)</text>
+  <text x="395" y="184" fill="#94a3b8" font-size="9">displacement/speed removed: r~0.99 with radial_growth</text>
+  <text x="395" y="200" fill="#94a3b8" font-size="9">sin/cos kept: encodes direction without wrap-around</text>
+  <text x="395" y="216" fill="#94a3b8" font-size="9">134 deg = SE direction (toward community)</text>
+
+  <!-- ===== 下半: 低风险 -- 无运动 ===== -->
+  <rect x="10" y="258" width="700" height="200" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="260" width="300" height="20" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="275" fill="#4ade80" font-size="11" font-weight="700">LOW RISK -- no centroid motion (single snapshot)</text>
+
+  <!-- 静止火灾 -->
+  <ellipse cx="180" cy="370" rx="20" ry="16" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="180" cy="370" r="4" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
+  <text x="180" y="400" text-anchor="middle" fill="#94a3b8" font-size="10">C0 = only point</text>
+
+  <!-- 无方向标记 -->
+  <text x="240" y="360" fill="#94a3b8" font-size="20" opacity="0.3">?</text>
+  <text x="240" y="380" fill="#94a3b8" font-size="10" opacity="0.5">No direction</text>
+
+  <!-- sin/cos 默认值示意 -->
+  <circle cx="180" cy="430" r="20" fill="none" stroke="#334155" stroke-width="1"/>
+  <line x1="180" y1="410" x2="180" y2="450" stroke="#334155" stroke-width="0.5" opacity="0.4"/>
+  <line x1="160" y1="430" x2="200" y2="430" stroke="#334155" stroke-width="0.5" opacity="0.4"/>
+  <circle cx="200" cy="430" r="3" fill="#94a3b8" opacity="0.5"/>
+  <text x="208" y="428" fill="#94a3b8" font-size="8">sin=0, cos=1</text>
+  <text x="208" y="440" fill="#94a3b8" font-size="8">(default: East)</text>
+
+  <!-- 数据面板 -->
+  <rect x="380" y="280" width="315" height="160" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="395" y="298" fill="#e2e8f0" font-size="10" font-weight="600">Centroid Motion Columns:</text>
+  <text x="395" y="316" fill="#94a3b8" font-size="10">centroid_displacement_m = 0</text>
+  <text x="395" y="332" fill="#94a3b8" font-size="10">centroid_speed_m_per_h = 0</text>
+  <text x="395" y="352" fill="#94a3b8" font-size="10">spread_bearing_deg = 0</text>
+  <text x="395" y="368" fill="#94a3b8" font-size="10">spread_bearing_sin = 0</text>
+  <text x="395" y="384" fill="#94a3b8" font-size="10">spread_bearing_cos = 1.0</text>
+  <text x="660" y="384" fill="#94a3b8" font-size="9">(cos(0)=1)</text>
+  <text x="395" y="404" fill="#f87171" font-size="9">All zeros = "no data", not "fire is stationary"</text>
+  <text x="395" y="420" fill="#94a3b8" font-size="9">cos=1 is a default artifact, not real direction</text>
+
+  <!-- 底部对比 -->
+  <text x="360" y="478" text-anchor="middle" fill="#94a3b8" font-size="11">Key: displacement/speed are redundant with radial_growth (removed). Bearing sin/cos encode direction for 27.6% of samples.</text>
+</svg>
+<p class="svg-caption">Fig 4. 质心运动对比 -- 活跃位移（744m, SE方向）vs 静止（单次快照, 全零）</p>
+
+<table>
+  <tr><th>#</th><th>列名</th><th>零值占比</th><th>含义</th><th>作用</th></tr>
+  <tr><td>14</td><td><code>centroid_displacement_m</code></td><td>88.7%</td><td>火灾质心的位移距离（米）</td><td>与 radial_growth_m 高度相关（r~0.99），<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>15</td><td><code>centroid_speed_m_per_h</code></td><td>88.7%</td><td>质心移动速度（米/小时）</td><td>与 radial_growth_rate 高度相关，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>16</td><td><code>spread_bearing_deg</code></td><td>88.7%</td><td>火灾扩散方向（角度，0-360）</td><td>火往哪个方向烧。零=没有方向信息</td></tr>
+  <tr><td>17</td><td><code>spread_bearing_sin</code></td><td>88.7%</td><td>sin(扩散方向)</td><td>方向的南北分量（正=北，负=南）</td></tr>
+  <tr><td>18</td><td><code>spread_bearing_cos</code></td><td>--</td><td>cos(扩散方向)</td><td>方向的东西分量（正=东，负=西）。无观测时默认=1（cos(0)=1）</td></tr>
+</table>
+
+<h3>9.5 距离（9 列）-- 火离社区多远、在靠近还是远离</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="520" fill="#0f172a" rx="8"/>
+  <defs>
+    <marker id="arrowP5" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#a78bfa"/></marker>
+  </defs>
+
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Distance &amp; Approach: Close Threat vs Distant Safe</text>
+
+  <!-- ===== 上半: 高风险 -- 近距离 ===== -->
+  <rect x="10" y="38" width="700" height="195" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="240" height="20" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="55" fill="#f87171" font-size="11" font-weight="700">HIGH RISK -- 563m from community</text>
+
+  <!-- 社区 -->
+  <rect x="310" y="105" width="14" height="20" fill="#64748b" rx="2"/>
+  <rect x="328" y="110" width="10" height="14" fill="#64748b" rx="2"/>
+  <text x="322" y="140" text-anchor="middle" fill="#e2e8f0" font-size="9">Community</text>
+
+  <!-- 5km 疏散区 -->
+  <circle cx="322" cy="115" r="90" fill="#f87171" opacity="0.05" stroke="#f87171" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.4"/>
+  <text x="322" y="35" text-anchor="middle" fill="#f87171" font-size="9" opacity="0.6">5km zone</text>
+
+  <!-- 火灾 (在疏散区内!) -->
+  <ellipse cx="260" cy="115" rx="30" ry="22" fill="#ef4444" opacity="0.3" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="260" cy="115" r="3" fill="#fbbf24"/>
+
+  <!-- 距离线 -->
+  <line x1="290" y1="115" x2="308" y2="115" stroke="#38bdf8" stroke-width="2.5"/>
+  <circle cx="290" cy="115" r="3" fill="#38bdf8"/>
+  <circle cx="308" cy="115" r="3" fill="#38bdf8"/>
+  <text x="299" y="108" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">563m</text>
+  <text x="299" y="130" text-anchor="middle" fill="#f87171" font-size="9">Inside 5km!</text>
+
+  <!-- 数据面板 -->
+  <rect x="390" y="55" width="305" height="165" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="405" y="73" fill="#e2e8f0" font-size="10" font-weight="600">Distance Columns:</text>
+  <text x="405" y="90" fill="#38bdf8" font-size="10">dist_min_ci_0_5h = 563 m</text>
+  <text x="660" y="90" fill="#f87171" font-size="9">(danger)</text>
+  <text x="405" y="106" fill="#94a3b8" font-size="10">dist_std_ci_0_5h = 0</text>
+  <text x="405" y="122" fill="#a78bfa" font-size="10">dist_change_ci_0_5h = 0</text>
+  <text x="660" y="122" fill="#94a3b8" font-size="9">(no change)</text>
+  <text x="405" y="138" fill="#fb923c" font-size="10">closing_speed = 0 m/h</text>
+  <text x="405" y="154" fill="#94a3b8" font-size="10">dist_accel = 0</text>
+  <text x="405" y="170" fill="#94a3b8" font-size="10">dist_fit_r2 = 0</text>
+  <text x="405" y="190" fill="#94a3b8" font-size="9">Note: closing_speed=0 but fire is expanding INTO</text>
+  <text x="405" y="204" fill="#94a3b8" font-size="9">the zone via area growth, not linear approach</text>
+
+  <!-- ===== 下半: 低风险 -- 远距离 ===== -->
+  <rect x="10" y="243" width="700" height="195" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="245" width="240" height="20" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="260" fill="#4ade80" font-size="11" font-weight="700">LOW RISK -- 31 km from community</text>
+
+  <!-- 火灾 (远处小点) -->
+  <ellipse cx="50" cy="350" rx="12" ry="10" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1"/>
+  <circle cx="50" cy="350" r="2" fill="#fbbf24"/>
+  <text x="50" y="370" text-anchor="middle" fill="#94a3b8" font-size="9">Fire</text>
+
+  <!-- 社区 (远处) -->
+  <rect x="660" y="342" width="10" height="14" fill="#64748b" rx="1"/>
+  <text x="665" y="365" text-anchor="middle" fill="#e2e8f0" font-size="9">Comm.</text>
+
+  <!-- 5km 疏散区 (远处小圈) -->
+  <circle cx="665" cy="350" r="10" fill="none" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2" opacity="0.3"/>
+
+  <!-- 距离线 -->
+  <line x1="62" y1="350" x2="654" y2="350" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.5"/>
+  <text x="358" y="343" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">31,059 m (31 km)</text>
+  <text x="358" y="363" text-anchor="middle" fill="#4ade80" font-size="9">6x outside evacuation zone</text>
+
+  <!-- 数据面板 -->
+  <rect x="390" y="270" width="305" height="145" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="405" y="288" fill="#e2e8f0" font-size="10" font-weight="600">Distance Columns:</text>
+  <text x="405" y="305" fill="#38bdf8" font-size="10">dist_min_ci_0_5h = 31,059 m</text>
+  <text x="660" y="305" fill="#4ade80" font-size="9">(safe)</text>
+  <text x="405" y="321" fill="#94a3b8" font-size="10">dist_std_ci_0_5h = 0</text>
+  <text x="405" y="337" fill="#94a3b8" font-size="10">dist_change_ci_0_5h = 0</text>
+  <text x="405" y="353" fill="#94a3b8" font-size="10">closing_speed = 0 m/h</text>
+  <text x="405" y="369" fill="#94a3b8" font-size="10">dist_accel = 0</text>
+  <text x="405" y="385" fill="#94a3b8" font-size="10">dist_fit_r2 = 0</text>
+  <text x="405" y="403" fill="#94a3b8" font-size="9">Single observation: all dynamics = 0</text>
+
+  <!-- ===== 底部: 重叠区距离尺 ===== -->
+  <rect x="10" y="445" width="700" height="65" fill="#1e293b" rx="6" stroke="#334155" stroke-width="1"/>
+  <text x="360" y="462" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">Distance Spectrum: Where Do These Samples Fall?</text>
+
+  <!-- 距离刻度尺 -->
+  <line x1="40" y1="485" x2="690" y2="485" stroke="#334155" stroke-width="2"/>
+  <line x1="40" y1="481" x2="40" y2="489" stroke="#94a3b8" stroke-width="1"/>
+  <text x="40" y="500" text-anchor="middle" fill="#94a3b8" font-size="8">0</text>
+  <line x1="100" y1="481" x2="100" y2="489" stroke="#94a3b8" stroke-width="1"/>
+  <text x="100" y="500" text-anchor="middle" fill="#94a3b8" font-size="8">657m</text>
+  <line x1="280" y1="481" x2="280" y2="489" stroke="#94a3b8" stroke-width="1"/>
+  <text x="280" y="500" text-anchor="middle" fill="#94a3b8" font-size="8">4545m</text>
+  <line x1="320" y1="481" x2="320" y2="489" stroke="#f87171" stroke-width="1"/>
+  <text x="320" y="500" text-anchor="middle" fill="#f87171" font-size="8">5km</text>
+  <line x1="690" y1="481" x2="690" y2="489" stroke="#94a3b8" stroke-width="1"/>
+  <text x="690" y="500" text-anchor="middle" fill="#94a3b8" font-size="8">757km</text>
+
+  <!-- 区域着色 -->
+  <rect x="40" y="479" width="60" height="12" fill="#f87171" opacity="0.15" rx="2"/>
+  <rect x="100" y="479" width="180" height="12" fill="#fbbf24" opacity="0.12" rx="2"/>
+  <rect x="280" y="479" width="410" height="12" fill="#4ade80" opacity="0.08" rx="2"/>
+
+  <!-- 高风险样本标记 -->
+  <circle cx="48" cy="478" r="4" fill="#f87171"/>
+  <text x="48" y="473" text-anchor="middle" fill="#f87171" font-size="8">563m</text>
+
+  <!-- 低风险样本标记 (远处, 用箭头指示超出范围) -->
+  <text x="660" y="473" fill="#4ade80" font-size="8">31km --></text>
+
+  <!-- 区域标签 -->
+  <text x="70" y="475" fill="#f87171" font-size="7">Danger</text>
+  <text x="190" y="475" text-anchor="middle" fill="#fbbf24" font-size="7">Overlap (hard)</text>
+  <text x="450" y="475" text-anchor="middle" fill="#4ade80" font-size="7">Safe</text>
+</svg>
+<p class="svg-caption">Fig 5. 距离对比 -- 563m（疏散区内, 高风险）vs 31km（远离, 低风险）+ 重叠区分布</p>
+
+<table>
+  <tr><th>#</th><th>列名</th><th>零值占比</th><th>含义</th><th>作用</th></tr>
+  <tr><td>19</td><td><code>dist_min_ci_0_5h</code></td><td>0%</td><td>火灾边界到最近社区的最短距离（米）</td><td><span class="tag tag-green">最重要的单一特征</span>，与 event 的 |r|=0.481。&lt;5km 的 69 个样本恰好对应 event=1</td></tr>
+  <tr><td>20</td><td><code>dist_std_ci_0_5h</code></td><td>91.4%</td><td>多次观测中距离的标准差</td><td>距离波动大 = 火在来回摆动或快速接近</td></tr>
+  <tr><td>21</td><td><code>dist_change_ci_0_5h</code></td><td>91.9%</td><td>距离的总变化量（末距离 - 初距离）</td><td>正=远离，负=接近</td></tr>
+  <tr><td>22</td><td><code>dist_slope_ci_0_5h</code></td><td>76.5%</td><td>距离对时间的线性回归斜率</td><td>比 dist_change 更稳健的接近速度估计。与 closing_speed 高度相关，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>23</td><td><code>closing_speed_m_per_h</code></td><td>91.9%</td><td>接近速度（米/小时），正=接近</td><td>火靠近社区的速度。负值=火在远离</td></tr>
+  <tr><td>24</td><td><code>closing_speed_abs_m_per_h</code></td><td>91.9%</td><td>接近速度的绝对值</td><td>与 closing_speed 高度相关，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>25</td><td><code>projected_advance_m</code></td><td>91.9%</td><td>预计推进距离 = -dist_change</td><td>与 dist_change 完全互为相反数（r=-1.0），<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>26</td><td><code>dist_accel_m_per_h2</code></td><td>84.2%</td><td>距离变化的加速度（米/小时^2）</td><td>火在加速接近还是减速？需要 3+ 次观测才有意义</td></tr>
+  <tr><td>27</td><td><code>dist_fit_r2_0_5h</code></td><td>91.4%</td><td>距离-时间线性回归的 R^2</td><td>接近趋势有多线性。高=匀速接近，低=忽快忽慢</td></tr>
+</table>
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>距离组是预测力最强的一组。<code>dist_min_ci_0_5h</code> 单独就能把大部分样本分对 -- 远的火（&gt;5km）基本不会烧到。但在 657m~4545m 的重叠区（63 个样本，28.5%），距离不够用了，这时 closing_speed 和 alignment 才发挥作用。</p>
+</div>
+
+<h3>9.6 方向性（4 列）-- 火是朝社区烧还是朝别处烧</h3>
+
+<svg class="svg-diagram" viewBox="0 0 720 530" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="530" fill="#0f172a" rx="8"/>
+
+  <!-- 标题 -->
+  <text x="360" y="25" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Directionality: Aligned Toward Community vs No Direction</text>
+
+  <defs>
+    <marker id="arrowG6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4ade80"/></marker>
+    <marker id="arrowR6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f87171"/></marker>
+    <marker id="arrowC6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#38bdf8"/></marker>
+  </defs>
+
+  <!-- ===== 上半: 高风险 -- alignment=0.64, 朝社区偏 ===== -->
+  <rect x="10" y="38" width="700" height="230" fill="#1e293b" rx="6" stroke="#f87171" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="40" width="320" height="20" fill="#f87171" rx="4" opacity="0.2"/>
+  <text x="22" y="55" fill="#f87171" font-size="11" font-weight="700">HIGH RISK -- fire spreading toward community (alignment=0.64)</text>
+
+  <!-- 火灾质心 -->
+  <circle cx="100" cy="165" r="5" fill="#fbbf24" stroke="#fff" stroke-width="1.5"/>
+  <text x="80" y="185" fill="#fbbf24" font-size="10">Fire</text>
+
+  <!-- 社区 -->
+  <rect x="330" y="155" width="14" height="20" fill="#64748b" rx="2"/>
+  <rect x="348" y="160" width="10" height="14" fill="#64748b" rx="2"/>
+  <text x="345" y="190" text-anchor="middle" fill="#e2e8f0" font-size="9">Community</text>
+
+  <!-- 火到社区参考线 -->
+  <line x1="105" y1="165" x2="328" y2="165" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.4"/>
+  <text x="215" y="180" text-anchor="middle" fill="#94a3b8" font-size="8" opacity="0.6">fire-to-community axis</text>
+
+  <!-- 总速度向量 (斜向, alignment=0.64 约50度偏角) -->
+  <line x1="105" y1="163" x2="230" y2="105" stroke="#4ade80" stroke-width="2.5" marker-end="url(#arrowG6)"/>
+  <text x="180" y="98" fill="#4ade80" font-size="10" font-weight="600">V (spread velocity)</text>
+
+  <!-- along-track 分量 -->
+  <line x1="105" y1="165" x2="210" y2="165" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowC6)"/>
+  <text x="160" y="160" fill="#38bdf8" font-size="9" font-weight="600">along_track = 150 m/h</text>
+
+  <!-- cross-track 分量 -->
+  <line x1="210" y1="165" x2="230" y2="105" stroke="#f87171" stroke-width="2" marker-end="url(#arrowR6)"/>
+  <text x="240" y="135" fill="#f87171" font-size="9" font-weight="600">cross_track = 181 m/h</text>
+
+  <!-- 直角标记 -->
+  <rect x="203" y="155" width="8" height="8" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.5"/>
+
+  <!-- 角度弧 -->
+  <path d="M135 165 A30 30 0 0 0 128 148" fill="none" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="142" y="150" fill="#fb923c" font-size="9">theta</text>
+
+  <!-- alignment 可视化 (小仪表) -->
+  <rect x="100" y="200" width="180" height="55" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="110" y="218" fill="#e2e8f0" font-size="10" font-weight="600">Alignment Gauge:</text>
+  <rect x="110" y="228" width="160" height="8" fill="#334155" rx="4"/>
+  <rect x="110" y="228" width="131" height="8" fill="#fb923c" rx="4" opacity="0.6"/>
+  <text x="110" y="248" fill="#f87171" font-size="8">-1 (away)</text>
+  <text x="190" y="248" text-anchor="middle" fill="#94a3b8" font-size="8">0</text>
+  <text x="270" y="248" text-anchor="end" fill="#4ade80" font-size="8">+1 (toward)</text>
+  <circle cx="241" cy="232" r="4" fill="#fbbf24" stroke="#fff" stroke-width="1"/>
+  <text x="241" y="222" text-anchor="middle" fill="#fbbf24" font-size="8">0.64</text>
+
+  <!-- 数据面板 -->
+  <rect x="390" y="60" width="305" height="195" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="405" y="78" fill="#e2e8f0" font-size="10" font-weight="600">Directionality Columns:</text>
+  <text x="405" y="96" fill="#fb923c" font-size="10">alignment_cos = 0.637</text>
+  <text x="660" y="96" fill="#f87171" font-size="9">(removed)</text>
+  <text x="405" y="112" fill="#e2e8f0" font-size="10">alignment_abs = 0.637</text>
+  <text x="660" y="112" fill="#4ade80" font-size="9">(kept)</text>
+  <text x="405" y="128" fill="#38bdf8" font-size="10">along_track_speed = 150 m/h</text>
+  <text x="660" y="128" fill="#f87171" font-size="9">(removed)</text>
+  <text x="405" y="144" fill="#f87171" font-size="10">cross_track_component = 181 m/h</text>
+  <text x="660" y="144" fill="#4ade80" font-size="9">(kept)</text>
+  <text x="405" y="168" fill="#94a3b8" font-size="9">alignment_cos removed: sign-flip of alignment_abs</text>
+  <text x="405" y="184" fill="#94a3b8" font-size="9">along_track removed: r~0.96 with closing_speed</text>
+  <text x="405" y="200" fill="#94a3b8" font-size="9">cross_track kept: unique lateral drift info</text>
+  <text x="405" y="220" fill="#e2e8f0" font-size="9">Interpretation: 64% of velocity aims at community,</text>
+  <text x="405" y="236" fill="#e2e8f0" font-size="9">but significant lateral drift (181 m/h sideways)</text>
+
+  <!-- ===== 下半: 低风险 -- 无方向 ===== -->
+  <rect x="10" y="278" width="700" height="210" fill="#1e293b" rx="6" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/>
+  <rect x="12" y="280" width="320" height="20" fill="#4ade80" rx="4" opacity="0.15"/>
+  <text x="22" y="295" fill="#4ade80" font-size="11" font-weight="700">LOW RISK -- no directional information (single snapshot)</text>
+
+  <!-- 火灾质心 (静止) -->
+  <circle cx="100" cy="400" r="5" fill="#fbbf24" stroke="#fff" stroke-width="1.5"/>
+  <text x="80" y="420" fill="#fbbf24" font-size="10">Fire</text>
+
+  <!-- 社区 (远处) -->
+  <rect x="330" y="392" width="10" height="14" fill="#64748b" rx="1"/>
+  <text x="335" y="420" text-anchor="middle" fill="#e2e8f0" font-size="9">Comm.</text>
+
+  <!-- 参考线 -->
+  <line x1="105" y1="400" x2="328" y2="400" stroke="#334155" stroke-width="1" stroke-dasharray="4 3" opacity="0.3"/>
+
+  <!-- 无速度 -- 问号 -->
+  <text x="150" y="395" fill="#94a3b8" font-size="24" opacity="0.3">?</text>
+  <text x="150" y="415" fill="#94a3b8" font-size="9" opacity="0.5">No velocity data</text>
+
+  <!-- alignment 仪表 (零) -->
+  <rect x="100" y="435" width="180" height="45" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="110" y="453" fill="#e2e8f0" font-size="10" font-weight="600">Alignment Gauge:</text>
+  <rect x="110" y="462" width="160" height="8" fill="#334155" rx="4"/>
+  <circle cx="190" cy="466" r="4" fill="#94a3b8" stroke="#fff" stroke-width="1"/>
+  <text x="190" y="458" text-anchor="middle" fill="#94a3b8" font-size="8">0 (no data)</text>
+
+  <!-- 数据面板 -->
+  <rect x="390" y="300" width="305" height="175" fill="#0f172a" rx="4" stroke="#334155" stroke-width="1"/>
+  <text x="405" y="318" fill="#e2e8f0" font-size="10" font-weight="600">Directionality Columns:</text>
+  <text x="405" y="336" fill="#94a3b8" font-size="10">alignment_cos = 0</text>
+  <text x="405" y="352" fill="#94a3b8" font-size="10">alignment_abs = 0</text>
+  <text x="405" y="368" fill="#94a3b8" font-size="10">along_track_speed = 0</text>
+  <text x="405" y="384" fill="#94a3b8" font-size="10">cross_track_component = 0</text>
+  <text x="405" y="408" fill="#f87171" font-size="9">All zeros = "no observation", not "fire is still"</text>
+  <text x="405" y="424" fill="#94a3b8" font-size="9">72.4% of samples have alignment = 0</text>
+  <text x="405" y="440" fill="#94a3b8" font-size="9">Model uses has_dynamics (engineered) to distinguish</text>
+  <text x="405" y="456" fill="#94a3b8" font-size="9">"no data" from "genuinely no movement"</text>
+
+  <!-- 底部对比 -->
+  <text x="360" y="508" text-anchor="middle" fill="#94a3b8" font-size="11">Key: alignment_abs + cross_track are kept (unique info). along_track removed (redundant with closing_speed).</text>
+</svg>
+<p class="svg-caption">Fig 6. 方向性对比 -- 朝社区扩散（alignment=0.64, 有侧移）vs 无方向信息（全零）</p>
+
+<table>
+  <tr><th>#</th><th>列名</th><th>零值占比</th><th>含义</th><th>作用</th></tr>
+  <tr><td>28</td><td><code>alignment_cos</code></td><td>72.4%</td><td>火灾扩散方向与社区方向的余弦相似度</td><td>+1=正对社区烧，-1=背对社区烧。与 alignment_abs 互为符号翻转，<span class="tag tag-red">冗余已删除</span></td></tr>
+  <tr><td>29</td><td><code>alignment_abs</code></td><td>72.4%</td><td>alignment_cos 的绝对值</td><td>不管朝向还是背向，只看"对齐程度"。值高=火的运动方向和社区连线重合</td></tr>
+  <tr><td>30</td><td><code>cross_track_component</code></td><td>88.7%</td><td>火灾速度在垂直于社区方向上的分量</td><td>火在"横向漂移"多少。大=火在侧移，不直接威胁社区</td></tr>
+  <tr><td>31</td><td><code>along_track_speed</code></td><td>88.7%</td><td>火灾速度在社区方向上的分量</td><td>真正"朝社区冲"的速度。与 closing_speed 高度相关（r~0.96），<span class="tag tag-red">冗余已删除</span></td></tr>
+</table>
+
+<h3>9.7 时间元数据（3 列）-- 火灾什么时候发生的</h3>
+<table>
+  <tr><th>#</th><th>列名</th><th>含义</th><th>作用</th></tr>
+  <tr><td>32</td><td><code>event_start_hour</code></td><td>火灾开始的小时（0-23）</td><td>夜间火灾行为不同（风速低、湿度高）。被转换为 hour_sin/hour_cos 圆形编码</td></tr>
+  <tr><td>33</td><td><code>event_start_dayofweek</code></td><td>星期几（0-6）</td><td>可能反映人为因素（周末 vs 工作日的响应速度）</td></tr>
+  <tr><td>34</td><td><code>event_start_month</code></td><td>月份（1-12）</td><td>季节性：夏季干燥火势猛，冬季湿润火势弱</td></tr>
+</table>
+
+<h3>9.8 冗余列汇总（10 列已删除）</h3>
+<p>34 个原始特征中有 10 个因相关系数 |r| &gt; 0.95 被删除：</p>
+<table>
+  <tr><th>删除</th><th>保留</th><th>原因</th></tr>
+  <tr><td><code>relative_growth_0_5h</code></td><td><code>area_growth_rel_0_5h</code></td><td>r=1.0，完全相同</td></tr>
+  <tr><td><code>projected_advance_m</code></td><td><code>dist_change_ci_0_5h</code></td><td>r=-1.0，互为相反数</td></tr>
+  <tr><td><code>centroid_displacement_m</code></td><td><code>radial_growth_m</code></td><td>r~0.99</td></tr>
+  <tr><td><code>centroid_speed_m_per_h</code></td><td><code>radial_growth_rate_m_per_h</code></td><td>r~0.99</td></tr>
+  <tr><td><code>closing_speed_abs_m_per_h</code></td><td><code>closing_speed_m_per_h</code></td><td>r~0.99</td></tr>
+  <tr><td><code>log_area_ratio_0_5h</code></td><td><code>area_growth_rel_0_5h</code></td><td>r~0.99</td></tr>
+  <tr><td><code>log1p_growth</code></td><td><code>area_growth_abs_0_5h</code></td><td>r~0.97</td></tr>
+  <tr><td><code>alignment_cos</code></td><td><code>alignment_abs</code></td><td>符号翻转</td></tr>
+  <tr><td><code>dist_slope_ci_0_5h</code></td><td><code>closing_speed_m_per_h</code></td><td>r~0.99</td></tr>
+  <tr><td><code>along_track_speed</code></td><td><code>closing_speed_m_per_h</code></td><td>r~0.96</td></tr>
+</table>
+<div class="insight">
+  <div class="insight-title">Insight</div>
+  <p>去冗余对树模型很重要。RSF 每次分裂只看 sqrt(n) 个随机特征，如果 10 个冗余特征还在，它们会"占名额"，降低真正有用特征被选中的概率。去掉后，每次分裂从 24 个独立特征里选 6 个，信息密度更高。</p>
+</div>
+
+<p style="color:var(--muted); margin-top: 3rem; text-align: center; font-size: 0.85rem;">生成于 2026-02-12 | WiDS 2026 Kaggle 竞赛项目</p>
+
+<script>
+(function() {
+  var GROUPS = {
+    id: {
+      label: '标识/目标',
+      cols: [
+        {name:'event_id', type:'string', desc:'火灾事件唯一标识符', hiVal:'evt_2041', loVal:'evt_1087'},
+        {name:'event', type:'binary', desc:'目标变量: 1=火灾到达社区, 0=未到达 (删失)', hiVal:'1', loVal:'0'},
+        {name:'time_to_hit_hours', type:'float', desc:'火灾到达最近社区的时间 (小时)。删失样本为观测结束时间。', hiVal:'3.3 h', loVal:'43.8 h (删失)'}
+      ]
+    },
+    time: {
+      label: '时间覆盖',
+      cols: [
+        {name:'num_perimeters_0_5h', type:'int', desc:'0-5小时窗口内的火灾边界观测次数。多次观测=持续监控的活跃火灾。', hiVal:'17', loVal:'1'},
+        {name:'dt_first_last_0_5h', type:'float', desc:'首次与末次观测的时间跨度 (小时)。跨度大=长时间活跃。', hiVal:'3.16 h', loVal:'0 h'},
+        {name:'low_temporal_resolution_0_5h', type:'binary', desc:'是否仅有单次观测 (快照)。0=多次观测, 1=仅快照。', hiVal:'0 (多次)', loVal:'1 (快照)'}
+      ]
+    },
+    area: {
+      label: '面积增长',
+      cols: [
+        {name:'area_first_ha', type:'float', desc:'首次观测时的火灾面积 (公顷)。初始面积越大, 威胁越高。', hiVal:'54 ha', loVal:'14 ha'},
+        {name:'area_growth_abs_0_5h', type:'float', desc:'0-5h窗口内的绝对面积增长 (公顷)。', hiVal:'+280 ha', loVal:'0 ha'},
+        {name:'area_growth_rel_0_5h', type:'float', desc:'相对面积增长率 (%)。增长/初始面积。', hiVal:'+520%', loVal:'0%'},
+        {name:'area_growth_rate_ha_per_h', type:'float', desc:'面积增长速率 (公顷/小时)。', hiVal:'88.6 ha/h', loVal:'0'},
+        {name:'radial_growth_m', type:'float', desc:'等效圆半径增长 (米)。将面积转换为圆, 计算半径变化。', hiVal:'617 m', loVal:'r=211m (无增长)'},
+        {name:'radial_growth_rate_m_per_h', type:'float', desc:'半径增长速率 (米/小时)。', hiVal:'195 m/h', loVal:'0'},
+        {name:'log1p_area_first', type:'float', desc:'log(1+初始面积)。对数变换减少偏度。', hiVal:'4.02', loVal:'2.71', removed:true, removedReason:'与 area_first_ha 单调变换, r=1.0'}
+      ]
+    },
+    centroid: {
+      label: '质心位移',
+      cols: [
+        {name:'spread_bearing_deg', type:'float', desc:'火灾质心移动方向 (角度, 0-360)。0=正北, 90=正东。', hiVal:'134 deg (东南)', loVal:'0 (无位移)'},
+        {name:'spread_bearing_sin', type:'float', desc:'移动方向的正弦分量。将角度分解为东西分量。', hiVal:'0.72', loVal:'0'},
+        {name:'spread_bearing_cos', type:'float', desc:'移动方向的余弦分量。将角度分解为南北分量。', hiVal:'-0.69', loVal:'1.0'},
+        {name:'centroid_displacement_m', type:'float', desc:'质心总位移距离 (米)。', hiVal:'744 m', loVal:'0', removed:true, removedReason:'与 radial_growth_m 高度相关 r=0.98'},
+        {name:'centroid_speed_m_per_h', type:'float', desc:'质心移动速度 (米/小时)。', hiVal:'235 m/h', loVal:'0', removed:true, removedReason:'与 radial_growth_rate_m_per_h 高度相关 r=0.97'}
+      ]
+    },
+    dist: {
+      label: '社区距离',
+      cols: [
+        {name:'dist_min_ci_0_5h', type:'float', desc:'火灾边界到最近社区的最小距离 (米)。核心预测特征。', hiVal:'563 m', loVal:'31 km'},
+        {name:'dist_std_ci_0_5h', type:'float', desc:'距离的标准差。多次观测时反映距离波动。', hiVal:'0', loVal:'0'},
+        {name:'dist_change_ci_0_5h', type:'float', desc:'距离变化量 (末次-首次)。负值=接近社区。', hiVal:'0', loVal:'0'},
+        {name:'closing_speed_m_per_h', type:'float', desc:'接近速度 (米/小时)。正值=远离, 负值=接近。', hiVal:'0', loVal:'0'},
+        {name:'dist_accel_m_per_h2', type:'float', desc:'距离变化加速度 (米/小时^2)。', hiVal:'0', loVal:'0'},
+        {name:'dist_fit_r2_0_5h', type:'float', desc:'距离-时间线性拟合的 R2。高R2=距离变化趋势稳定。', hiVal:'0', loVal:'0'},
+        {name:'dist_slope_ci_0_5h', type:'float', desc:'距离-时间线性拟合斜率。', hiVal:'--', loVal:'--', removed:true, removedReason:'与 closing_speed 完全相关 r=1.0'},
+        {name:'closing_speed_abs_m_per_h', type:'float', desc:'接近速度的绝对值。', hiVal:'--', loVal:'--', removed:true, removedReason:'与 closing_speed 单调变换 |x|'},
+        {name:'projected_advance_m', type:'float', desc:'按当前速度外推的预计推进距离。', hiVal:'--', loVal:'--', removed:true, removedReason:'= closing_speed * dt, 线性组合冗余'}
+      ]
+    },
+    dir: {
+      label: '方向对齐',
+      cols: [
+        {name:'alignment_abs', type:'float', desc:'火灾扩散方向与社区方向的对齐度 (0-1)。1=正对社区扩散。', hiVal:'0.64', loVal:'0'},
+        {name:'cross_track_component', type:'float', desc:'垂直于火灾-社区连线的速度分量 (米/小时)。', hiVal:'181 m/h', loVal:'0'},
+        {name:'alignment_cos', type:'float', desc:'对齐度的余弦值 (含符号)。', hiVal:'--', loVal:'--', removed:true, removedReason:'与 alignment_abs 仅符号不同, sign flip'},
+        {name:'along_track_speed', type:'float', desc:'沿火灾-社区连线的速度分量。', hiVal:'--', loVal:'--', removed:true, removedReason:'与 closing_speed 高度相关 r~0.96'}
+      ]
+    },
+    meta: {
+      label: '时间元数据',
+      cols: [
+        {name:'event_start_hour', type:'int', desc:'火灾首次观测的小时 (0-23)。下午火灾更危险 (干燥+风)。', hiVal:'14:00', loVal:'10:00'},
+        {name:'event_start_dayofweek', type:'int', desc:'火灾首次观测的星期几 (0=周一)。', hiVal:'Wed (2)', loVal:'Mon (0)'},
+        {name:'event_start_month', type:'int', desc:'火灾首次观测的月份 (1-12)。冬季火灾模式不同。', hiVal:'2月', loVal:'12月'}
+      ]
+    }
+  };
+
+  var currentGroup = null;
+  var currentCol = null;
+
+  function switchTab(groupKey) {
+    currentGroup = groupKey;
+    currentCol = null;
+
+    // Update tab buttons
+    var btns = document.querySelectorAll('#ceTabs button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].className = btns[i].getAttribute('data-group') === groupKey ? 'active' : '';
+    }
+
+    // Show correct scene group via CSS class
+    var scenes = document.querySelectorAll('.ce-scene-group');
+    for (var i = 0; i < scenes.length; i++) {
+      if (scenes[i].id === 'ceG-' + groupKey) {
+        scenes[i].classList.add('active');
+      } else {
+        scenes[i].classList.remove('active');
+      }
+    }
+
+    // Render column list
+    var list = document.getElementById('ceList');
+    var group = GROUPS[groupKey];
+    var html = '';
+    for (var i = 0; i < group.cols.length; i++) {
+      var c = group.cols[i];
+      var cls = 'ce-col-btn';
+      if (c.removed) cls += ' removed';
+      html += '<button class="' + cls + '" data-col="' + c.name + '">' + c.name + '</button>';
+    }
+    list.innerHTML = html;
+
+    // Reset scene elements - remove bright class
+    var els = document.querySelectorAll('#ceG-' + groupKey + ' .ce-el');
+    for (var i = 0; i < els.length; i++) {
+      els[i].classList.remove('bright');
+    }
+
+    // Reset info panel
+    document.getElementById('ceInfo').innerHTML = '<div class="ce-info-hint">选择一个列名<br/>查看详细信息</div>';
+  }
+
+  function selectCol(colName) {
+    if (!currentGroup) return;
+    currentCol = colName;
+
+    // Highlight column button
+    var btns = document.querySelectorAll('#ceList .ce-col-btn');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].getAttribute('data-col') === colName) {
+        btns[i].classList.add('active');
+      } else {
+        btns[i].classList.remove('active');
+      }
+    }
+
+    // Dim all elements, brighten matching ones via CSS class
+    var sceneId = 'ceG-' + currentGroup;
+    var els = document.querySelectorAll('#' + sceneId + ' .ce-el');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var elCol = el.getAttribute('data-col');
+      if (elCol === colName) {
+        el.classList.add('bright');
+      } else {
+        el.classList.remove('bright');
+      }
+    }
+
+    // Update info panel
+    var group = GROUPS[currentGroup];
+    var col = null;
+    for (var i = 0; i < group.cols.length; i++) {
+      if (group.cols[i].name === colName) { col = group.cols[i]; break; }
+    }
+    if (!col) return;
+
+    var info = '<div class="ce-info-content">';
+    info += '<div class="ce-info-name">' + col.name + '</div>';
+    info += '<div class="ce-info-type">type: ' + col.type + '</div>';
+    info += '<div class="ce-info-desc">' + col.desc + '</div>';
+    info += '<div class="ce-info-vals">';
+    info += '<div class="ce-val-hi"><span class="ce-val-label">HIGH RISK:</span> ' + col.hiVal + '</div>';
+    info += '<div class="ce-val-lo"><span class="ce-val-label">LOW RISK:</span> ' + col.loVal + '</div>';
+    info += '</div>';
+    if (col.removed) {
+      info += '<div class="ce-removed-badge">REMOVED</div>';
+      info += '<div class="ce-removed-reason">' + col.removedReason + '</div>';
+    }
+    info += '</div>';
+    document.getElementById('ceInfo').innerHTML = info;
+  }
+
+  // Event delegation for tabs
+  document.getElementById('ceTabs').addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var group = btn.getAttribute('data-group');
+    if (group) switchTab(group);
+  });
+
+  // Event delegation for column list
+  document.getElementById('ceList').addEventListener('click', function(e) {
+    var btn = e.target.closest('.ce-col-btn');
+    if (!btn) return;
+    var col = btn.getAttribute('data-col');
+    if (col) selectCol(col);
+  });
+
+  // Event delegation for SVG elements
+  document.getElementById('ceScene').addEventListener('click', function(e) {
+    var el = e.target.closest('.ce-el');
+    if (!el) return;
+    var col = el.getAttribute('data-col');
+    if (col) selectCol(col);
+  });
+
+  // Initialize
+  switchTab('id');
+})();
+</script>
+
+</body>
+</html>

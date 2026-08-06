@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "active": false,
+  "skill": "ralplan",
+  "keyword": "must complete",
+  "phase": "complete",
+  "activated_at": "2026-04-28T23:10:48.425Z",
+  "updated_at": "2026-04-29T00:51:54.7526705Z",
+  "source": "keyword-detector",
+  "session_id": "019dd65b-3e0f-7611-bfdd-7cd795e6f711",
+  "thread_id": "",
+  "turn_id": "019dd65c-0250-7740-bf8a-2c9b7791f34d",
+  "active_skills": [],
+  "initialized_mode": "ralplan",
+  "initialized_state_path": ".omx/state/sessions/019dd65b-3e0f-7611-bfdd-7cd795e6f711/ralph-state.json"
+}
