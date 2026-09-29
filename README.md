@@ -1,4 +1,4 @@
-# WiDS 2026 Clinical Prediction Pipeline / WiDS 2026 临床预测项目
+# WiDS 2026 Wildfire Risk Prediction Pipeline / WiDS 2026 野火风险预测项目
 
 ![Python](https://img.shields.io/badge/Python-ML%20Pipeline-blue)
 ![Competition](https://img.shields.io/badge/Kaggle-WiDS%202026-20BEFF)
@@ -9,7 +9,7 @@
 
 | Item | Summary |
 |------|---------|
-| Task | Clinical risk prediction / 临床风险预测 |
+| Task | Wildfire risk prediction / 野火风险预测 |
 | Setting | WiDS Datathon 2026 competition workflow |
 | Best public score | **0.97089** |
 | Core methods | Gradient boosting ensembles, calibration, risk scaling |
@@ -21,17 +21,17 @@
 
 ![WiDS Kaggle snapshot](assets/kaggle-screenshot.png)
 
-This repository contains my competition workflow for **WiDS Datathon 2026**, focused on clinical risk prediction with gradient boosting ensembles, calibration, and leaderboard-oriented validation.
+This repository contains my competition workflow for **WiDS Datathon 2026**, focused on wildfire risk prediction with gradient boosting ensembles, calibration, and leaderboard-oriented validation.
 
-本仓库记录了我在 **WiDS Datathon 2026** 中的主要建模与实验流程，重点是临床预测任务中的集成学习、校准、特征工程和离线验证策略。
+本仓库记录了我在 **WiDS Datathon 2026** 中的主要建模与实验流程，重点是野火风险预测任务中的集成学习、校准、特征工程和离线验证策略。
 
 ---
 
 ## Overview / 项目概述
 
 **Goal / 目标**
-- Build a high-performing clinical prediction pipeline for the WiDS 2026 challenge.
-- 构建一个高性能的临床预测系统，并尽可能缩小本地验证与 Kaggle leaderboard 之间的差距。
+- Build a high-performing wildfire risk prediction pipeline for the WiDS 2026 challenge.
+- 构建一个高性能的野火风险预测系统，并尽可能缩小本地验证与 Kaggle leaderboard 之间的差距。
 
 **What makes this project interesting / 为什么这个项目值得看**
 - Not just a single model: this repo captures iterative experimentation across multiple ensemble strategies.
